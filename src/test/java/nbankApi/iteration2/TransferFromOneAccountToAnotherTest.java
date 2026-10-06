@@ -42,7 +42,9 @@ public class TransferFromOneAccountToAnotherTest {
     private Integer userAId;
     private Integer userAAccountNumber1;
     private Integer userAAccountNumber2;
+    private String userABankAccountNumber1;
     private String userABankAccountNumber2;
+    private double userAInitialBalanceBankAccountNumber1;
     private double userAInitialBalanceBankAccountNumber2;
     private double userACurrentBalanceBankAccountNumber2;
 
@@ -122,6 +124,8 @@ public class TransferFromOneAccountToAnotherTest {
                 .extract()
                 .response();
         userAAccountNumber1 = createAccountA1ByUserAResponse.jsonPath().getInt("id");
+        userABankAccountNumber1 = createAccountA1ByUserAResponse.jsonPath().getString("accountNumber");
+        userAInitialBalanceBankAccountNumber1 = createAccountA1ByUserAResponse.jsonPath().getDouble("balance");
 
         System.out.println("\n-------Setup: User A creates account 2-------");
         Response createAccountA2ByUserAResponse = given()
@@ -223,32 +227,6 @@ public class TransferFromOneAccountToAnotherTest {
         }
     }
 
-    private void assertUserABalance(int accountId, double expectedBalance) {
-        System.out.println("\n-------Check balance user A-------");
-        given()
-                .log().uri().log().headers()
-                .accept(ContentType.JSON)
-                .header("Authorization", userAToken)
-                .get("http://localhost:4111/api/v1/customer/accounts")
-                .then()
-                .log().status().log().body()
-                .statusCode(HttpStatus.SC_OK)
-                .body("find { it.id == %d }.balance" .formatted(accountId), equalTo(expectedBalance));
-    }
-
-    private void assertUserBBalance(double expectedBalance) {
-        System.out.println("\n-------Check balance user B-------");
-        given()
-                .log().uri().log().headers()
-                .accept(ContentType.JSON)
-                .header("Authorization", userBToken)
-                .get("http://localhost:4111/api/v1/customer/accounts")
-                .then()
-                .log().status().log().body()
-                .statusCode(HttpStatus.SC_OK)
-                .body("find { it.id == %d }.balance" .formatted(userBAccountNumber), equalTo(expectedBalance));
-    }
-
     @Test
     public void shouldTransferToAnotherUserSuccessfullyWhenAllDataValid() {
         System.out.println("\n-------Base transfer to another user-------");
@@ -269,12 +247,36 @@ public class TransferFromOneAccountToAnotherTest {
                 .then()
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_OK)
+                .body("message", equalTo("Transfer successful"))
                 .body("senderAccountId", equalTo(userAAccountNumber1))
                 .body("amount", equalTo(BASE_TRANSFER_AMOUNT))
                 .body("receiverAccountId", equalTo(userBAccountNumber));
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE - BASE_TRANSFER_AMOUNT);
-        assertUserBBalance(userBInitialBalanceBankAccount + BASE_TRANSFER_AMOUNT);
+        System.out.println("\n-------Verification of decrease in the user's A balance-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE - BASE_TRANSFER_AMOUNT));
+
+        System.out.println("\n-------Verification of increase in the user's B balance-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount + BASE_TRANSFER_AMOUNT));
 
         System.out.println("\n-------Check history sender transaction (TRANSFER_OUT)-------");
         given()
@@ -325,12 +327,36 @@ public class TransferFromOneAccountToAnotherTest {
                 .then()
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_OK)
+                .body("message", equalTo("Transfer successful"))
                 .body("senderAccountId", equalTo(userAAccountNumber1))
                 .body("amount", equalTo(BASE_TRANSFER_AMOUNT))
                 .body("receiverAccountId", equalTo(userAAccountNumber2));
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE - BASE_TRANSFER_AMOUNT);
-        assertUserABalance(userAAccountNumber2, userAInitialBalanceBankAccountNumber2 + BASE_TRANSFER_AMOUNT);
+        System.out.println("\n-------Verification of decrease in the user's A balance account 1-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE - BASE_TRANSFER_AMOUNT));
+
+        System.out.println("\n-------Verification of increase in the user's A balance account 2-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber2, userABankAccountNumber2),
+                        equalTo(userAInitialBalanceBankAccountNumber2 + BASE_TRANSFER_AMOUNT));
 
         System.out.println("\n-------Check history sender transaction (TRANSFER_OUT)-------");
         given()
@@ -386,12 +412,36 @@ public class TransferFromOneAccountToAnotherTest {
                 .then()
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_OK)
+                .body("message", equalTo("Transfer successful"))
                 .body("senderAccountId", equalTo(userAAccountNumber1))
                 .body("amount", equalTo(amount))
                 .body("receiverAccountId", equalTo(userBAccountNumber));
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE - amount);
-        assertUserBBalance(userBInitialBalanceBankAccount + amount);
+        System.out.println("\n-------Verification of decrease in the user's A balance-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE - amount));
+
+        System.out.println("\n-------Verification of increase in the user's B balance-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount + amount));
 
         System.out.println("\n-------Check sender transaction in history-------");
         given()
@@ -448,8 +498,31 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount));
     }
 
     @Test
@@ -496,8 +569,31 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserABalance(userAAccountNumber2, userACurrentBalanceBankAccountNumber2);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber2, userABankAccountNumber2),
+                        equalTo(SETUP_DEPOSIT_AMOUNT));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount));
     }
 
     @ParameterizedTest
@@ -526,8 +622,31 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount));
     }
 
     @Test
@@ -551,9 +670,7 @@ public class TransferFromOneAccountToAnotherTest {
                 .statusCode(HttpStatus.SC_OK)
                 .body("id", notNullValue())
                 .body("accountNumber", equalTo(userBBankAccountNumber))
-                .body("balance", equalTo(SETUP_DEPOSIT_AMOUNT))
-                .extract()
-                .body().jsonPath().getDouble("balance");
+                .body("balance", equalTo(SETUP_DEPOSIT_AMOUNT));
 
         System.out.println("\n-------Transfer money from another user's account-------");
         given()
@@ -568,14 +685,37 @@ public class TransferFromOneAccountToAnotherTest {
                           "amount": %s
                         }
                         """
-                        .formatted(userBAccountNumber, userAAccountNumber1, BASE_TRANSFER_AMOUNT))
+                        .formatted(userBAccountNumber, userAAccountNumber2, BASE_TRANSFER_AMOUNT))
                 .post("http://localhost:4111/api/v1/accounts/transfer")
                 .then()
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_FORBIDDEN);
 
-        assertUserBBalance(SETUP_DEPOSIT_AMOUNT);
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(SETUP_DEPOSIT_AMOUNT));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber2, userABankAccountNumber2),
+                        equalTo(userAInitialBalanceBankAccountNumber2));
     }
 
     @Test
@@ -599,8 +739,44 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_FORBIDDEN);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged (BankAccountNumber1)-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
+
+        System.out.println("\n-------Check: sender's balance remained unchanged (BankAccountNumber2)-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber2, userABankAccountNumber2),
+                        equalTo(userAInitialBalanceBankAccountNumber2));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount));
     }
 
     @Test
@@ -624,8 +800,18 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
     }
 
     @Test
@@ -649,8 +835,31 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_UNAUTHORIZED);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount));
     }
 
     @Test
@@ -674,7 +883,18 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
     }
 
     @Test
@@ -697,8 +917,31 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount));
     }
 
     @Test
@@ -721,8 +964,31 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount));
     }
 
     @Test
@@ -745,8 +1011,31 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount));
     }
 
     @Test
@@ -763,7 +1052,30 @@ public class TransferFromOneAccountToAnotherTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserABalance(userAAccountNumber1, INITIAL_SENDER_BALANCE);
-        assertUserBBalance(userBInitialBalanceBankAccount);
+        System.out.println("\n-------Check: sender's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber1, userABankAccountNumber1),
+                        equalTo(INITIAL_SENDER_BALANCE));
+
+        System.out.println("\n-------Check: receiver's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userBToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userBAccountNumber, userBBankAccountNumber),
+                        equalTo(userBInitialBalanceBankAccount));
     }
 }

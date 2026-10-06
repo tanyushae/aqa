@@ -114,6 +114,7 @@ public class UserDepositTest {
                 .extract()
                 .response();
         userAAccountNumber = createAccountByUserAResponse.jsonPath().getInt("id");
+        userABankAccountNumber = createAccountByUserAResponse.jsonPath().getString("accountNumber");
         userAInitialBalance = createAccountByUserAResponse.jsonPath().getDouble("balance");
 
         System.out.println("-------Setup: Create user B by admin-------");
@@ -178,36 +179,9 @@ public class UserDepositTest {
         }
     }
 
-    private void assertUserACurrentBalance(double expectedBalance) {
-        System.out.println("\n-------Check user balance-------");
-        given()
-                .log().uri().log().headers()
-                .accept(ContentType.JSON)
-                .header("Authorization", userAToken)
-                .get("http://localhost:4111/api/v1/customer/accounts")
-                .then()
-                .log().status().log().body()
-                .statusCode(HttpStatus.SC_OK)
-                .body("find { it.id == %d }.balance" .formatted(userAAccountNumber), equalTo(expectedBalance));
-    }
-
-    private void assertDepositTransactionExists(double depositAmount) {
-        System.out.println("\n-------Check history transaction (DEPOSIT)-------");
-        given()
-                .log().uri().log().headers()
-                .accept(ContentType.JSON)
-                .header("Authorization", userAToken)
-                .pathParam("accountId", userAAccountNumber)
-                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions")
-                .then()
-                .log().status().log().body()
-                .statusCode(HttpStatus.SC_OK)
-                .body("isEmpty()", is(false))
-                .body("find { it.type == 'DEPOSIT' && it.amount == %s }.relatedAccountId".formatted(depositAmount), equalTo(userAAccountNumber));
-    }
-
     @Test
     public void shouldDepositToAccountSuccessfullyWhenValidAmount() {
+        System.out.println("\n-------Base deposit to account-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -231,8 +205,32 @@ public class UserDepositTest {
                 .body("transactions.find { it.type == 'DEPOSIT' }.amount", equalTo(BASE_DEPOSIT_AMOUNT))
                 .body("transactions.find { it.type == 'DEPOSIT' }.relatedAccountId", equalTo(userAAccountNumber));
 
-        assertUserACurrentBalance(userAInitialBalance + BASE_DEPOSIT_AMOUNT);
-        assertDepositTransactionExists(BASE_DEPOSIT_AMOUNT);
+        System.out.println("\n-------Verification of increase in the user's balance-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance + BASE_DEPOSIT_AMOUNT));
+
+        System.out.println("\n-------Check transaction history: transaction (deposit) is present-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .pathParam("accountId", userAAccountNumber)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("isEmpty()", is(false))
+                .body("find { it.type == 'DEPOSIT' && it.amount == %s }.relatedAccountId"
+                        .formatted(BASE_DEPOSIT_AMOUNT), equalTo(userAAccountNumber));
     }
 
     @ParameterizedTest
@@ -242,6 +240,7 @@ public class UserDepositTest {
             MIN_DEPOSIT_LIMIT
     })
     public void shouldDepositToAccountSuccessfullyWhenValidBoundaryValues(double amount) {
+        System.out.println("\n-------Deposit to account with valid boundary values-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -265,17 +264,42 @@ public class UserDepositTest {
                 .body("transactions.find { it.type == 'DEPOSIT' }.amount", equalTo(amount))
                 .body("transactions.find { it.type == 'DEPOSIT' }.relatedAccountId", equalTo(userAAccountNumber));
 
-        assertUserACurrentBalance(userAInitialBalance + amount);
-        assertDepositTransactionExists(amount);
+        System.out.println("\n-------Verification of increase in the user's balance-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance + amount));
+
+        System.out.println("\n-------Check transaction history: transaction (deposit) is present-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .pathParam("accountId", userAAccountNumber)
+                .get("http://localhost:4111/api/v1/accounts/{accountId}/transactions")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("isEmpty()", is(false))
+                .body("find { it.type == 'DEPOSIT' && it.amount == %s }.relatedAccountId"
+                        .formatted(amount), equalTo(userAAccountNumber));
     }
 
     @ParameterizedTest
     @ValueSource(doubles = {
             MAX_DEPOSIT_LIMIT_PLUS_STEP,
             ZERO_AMOUNT,
-            NEGATIVE_AMOUNT,
+            NEGATIVE_AMOUNT
     })
     public void shouldReturn400WhenAmountInvalidBoundaryValues(double amount) {
+        System.out.println("\n-------Deposit with invalid boundary values-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -293,11 +317,23 @@ public class UserDepositTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserACurrentBalance(userAInitialBalance);
+        System.out.println("\n-------Check: user's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance));
     }
 
     @Test
     public void shouldReturn403WhenDepositToAnotherUserId() {
+        System.out.println("\n-------Deposit to another user's id-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -315,11 +351,23 @@ public class UserDepositTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_FORBIDDEN);
 
-        assertUserACurrentBalance(userAInitialBalance);
+        System.out.println("\n-------Check: user's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance));
     }
 
     @Test
     public void shouldReturn403WhenDepositToNonExistentUserId() {
+        System.out.println("\n-------Deposit to non-existent user id-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -337,11 +385,23 @@ public class UserDepositTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_FORBIDDEN);
 
-        assertUserACurrentBalance(userAInitialBalance);
+        System.out.println("\n-------Check: user's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance));
     }
 
     @Test
     public void shouldReturn401WhenUnauthorizedUser() {
+        System.out.println("\n-------Deposit when unauthorized user-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -358,7 +418,18 @@ public class UserDepositTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_UNAUTHORIZED);
 
-        assertUserACurrentBalance(userAInitialBalance);
+        System.out.println("\n-------Check: user's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance));
     }
 
     @ParameterizedTest
@@ -367,7 +438,8 @@ public class UserDepositTest {
             "\"500\"",
             "\"five\""
     })
-    public void shouldReturn400WhenInvalidDataTypeInAmountField(String amount) {
+    public void shouldReturn400WhenInvalidDataTypeInBalanceField(String amount) {
+        System.out.println("\n-------Deposit with invalid data type in balance field-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -385,11 +457,23 @@ public class UserDepositTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserACurrentBalance(userAInitialBalance);
+        System.out.println("\n-------Check: user's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance));
     }
 
     @Test
     public void shouldReturn400WithoutBalanceFieldInBody() {
+        System.out.println("\n-------Deposit without balance field in body-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -406,11 +490,23 @@ public class UserDepositTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserACurrentBalance(userAInitialBalance);
+        System.out.println("\n-------Check: user's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance));
     }
 
     @Test
     public void shouldReturn400WithoutIdFieldInBody() {
+        System.out.println("\n-------Deposit without id field in body-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -427,11 +523,23 @@ public class UserDepositTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserACurrentBalance(userAInitialBalance);
+        System.out.println("\n-------Check: user's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance));
     }
 
     @Test
     public void shouldReturn400WhenRequestWithoutBody() {
+        System.out.println("\n-------Deposit without body-------");
         given()
                 .log().uri().log().headers().log().body()
                 .contentType(ContentType.JSON)
@@ -443,6 +551,17 @@ public class UserDepositTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertUserACurrentBalance(userAInitialBalance);
+        System.out.println("\n-------Check: user's balance remained unchanged-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userAToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == %d && it.accountNumber == '%s' }.balance"
+                                .formatted(userAAccountNumber, userABankAccountNumber),
+                        equalTo(userAInitialBalance));
     }
 }

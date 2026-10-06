@@ -123,20 +123,6 @@ public class UserNameUpdateTest {
         }
     }
 
-    public void assertProfileName(String expectedName){
-        System.out.println("\n-------Check profile name-------");
-        given()
-                .log().uri().log().headers()
-                .accept(ContentType.JSON)
-                .header("Authorization", userToken)
-                .get("http://localhost:4111/api/v1/customer/profile")
-                .then()
-                .log().status().log().body()
-                .statusCode(HttpStatus.SC_OK)
-                .body("id", equalTo(userId))
-                .body("name", equalTo(expectedName));
-    }
-
     @ParameterizedTest(name = "Case #{index}: successful update to valid name: \"{0}\"")
     @ValueSource(strings = {
             VALID_PROFILE_NAME,
@@ -164,7 +150,17 @@ public class UserNameUpdateTest {
                 .body("customer.username", equalTo(userName))
                 .body("customer.name", equalTo(newProfileName));
 
-        assertProfileName(newProfileName);
+        System.out.println("\n-------Check: profile name updated-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userToken)
+                .get("http://localhost:4111/api/v1/customer/profile")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("id", equalTo(userId))
+                .body("name", equalTo(newProfileName));
     }
 
     @ParameterizedTest(name = "Case #{index}: fail to update profile with invalid name: \"{0}\"")
@@ -193,7 +189,17 @@ public class UserNameUpdateTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertProfileName(VALID_DEFAULT_PROFILE_NAME);
+        System.out.println("\n-------Check: profile name did not update-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userToken)
+                .get("http://localhost:4111/api/v1/customer/profile")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("id", equalTo(userId))
+                .body("name", equalTo(VALID_DEFAULT_PROFILE_NAME));
     }
 
     @Test
@@ -214,7 +220,17 @@ public class UserNameUpdateTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_UNAUTHORIZED);
 
-        assertProfileName(VALID_DEFAULT_PROFILE_NAME);
+        System.out.println("\n-------Check: profile name did not update-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userToken)
+                .get("http://localhost:4111/api/v1/customer/profile")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("id", equalTo(userId))
+                .body("name", equalTo(VALID_DEFAULT_PROFILE_NAME));
     }
 
     @Test
@@ -231,6 +247,16 @@ public class UserNameUpdateTest {
                 .log().status().log().body()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        assertProfileName(VALID_DEFAULT_PROFILE_NAME);
+        System.out.println("\n-------Check: profile name did not update-------");
+        given()
+                .log().uri().log().headers()
+                .accept(ContentType.JSON)
+                .header("Authorization", userToken)
+                .get("http://localhost:4111/api/v1/customer/profile")
+                .then()
+                .log().status().log().body()
+                .statusCode(HttpStatus.SC_OK)
+                .body("id", equalTo(userId))
+                .body("name", equalTo(VALID_DEFAULT_PROFILE_NAME));
     }
 }
