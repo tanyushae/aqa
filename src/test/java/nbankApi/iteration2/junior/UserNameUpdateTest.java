@@ -1,4 +1,4 @@
-package nbankApi.iteration2;
+package nbankApi.iteration2.junior;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
