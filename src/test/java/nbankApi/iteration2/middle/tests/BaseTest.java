@@ -19,31 +19,31 @@ import static io.restassured.path.json.config.JsonPathConfig.NumberReturnType.DO
 public class BaseTest {
     protected static String adminToken;
     protected SoftAssertions softly;
-    private static final ThreadLocal<List<Integer>> CREATED_USERS = ThreadLocal.withInitial(ArrayList::new);
+    private static final ThreadLocal<List<Integer>> CREATED_USER_IDS = ThreadLocal.withInitial(ArrayList::new);
 
     @BeforeAll
-    public static void setUpAll() {
+    public static void configureRestAssuredAndGetAdminToken() {
         RestAssured.config = RestAssured.config().jsonConfig(jsonConfig().numberReturnType(DOUBLE));
         adminToken = SetupSteps.getAdminToken();
     }
 
-    public static void trackUser(int userId) {
-        CREATED_USERS.get().add(userId);
+    public static void registerUserForCleanup(int userId) {
+        CREATED_USER_IDS.get().add(userId);
     }
 
     @BeforeEach
-    public void setupSoftAssertions() {
+    public void createSoftAssertions() {
         this.softly = new SoftAssertions();
     }
 
     @AfterEach
-    public void tearDown() {
+    public void assertAllAndDeleteCreatedUsers() {
         try {
             if (softly != null) {
                 softly.assertAll();
             }
         } finally {
-            List<Integer> userIds = CREATED_USERS.get();
+            List<Integer> userIds = CREATED_USER_IDS.get();
             for (int userId : userIds) {
                 try {
                     new AdminDeleteUserRequest(

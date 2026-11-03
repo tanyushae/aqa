@@ -10,8 +10,8 @@ import org.assertj.core.api.SoftAssertions;
 
 public class ProfileAssertions {
 
-    public static void assertUserProfile(SoftAssertions softly, String userToken,
-                                         int userId, String expectedName) {
+    public static void assertStoredProfile(SoftAssertions softly, String userToken,
+                                         int expectedUserId, String expectedName) {
 
         CustomerResponseDto customer = new GetCustomerProfileRequest(
                 RequestSpecs.authSpec(userToken),
@@ -25,7 +25,7 @@ public class ProfileAssertions {
         if (customer != null) {
             softly.assertThat(customer.getId())
                     .as("Check customer ID")
-                    .isEqualTo(userId);
+                    .isEqualTo(expectedUserId);
 
             softly.assertThat(customer.getName())
                     .as("Check customer name")

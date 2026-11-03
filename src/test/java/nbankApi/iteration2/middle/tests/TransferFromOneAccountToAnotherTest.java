@@ -1,407 +1,122 @@
 package nbankApi.iteration2.middle.tests;
 
-import nbankApi.iteration2.middle.assertions.TransactionAssertions;
-import nbankApi.iteration2.middle.support.steps.SetupSteps;
 import nbankApi.iteration2.middle.assertions.AccountAssertions;
+import nbankApi.iteration2.middle.assertions.TransactionAssertions;
 import nbankApi.iteration2.middle.assertions.TransferAssertions;
+import nbankApi.iteration2.middle.enums.AccountSelector;
+import nbankApi.iteration2.middle.enums.ExpectedError;
+import nbankApi.iteration2.middle.enums.RequestAuth;
+import nbankApi.iteration2.middle.enums.TransferDirection;
 import nbankApi.iteration2.middle.models.transfer.AccountTransferRequestDto;
 import nbankApi.iteration2.middle.requests.transfer.AccountTransferRequest;
 import nbankApi.iteration2.middle.specs.RequestSpecs;
 import nbankApi.iteration2.middle.specs.ResponseSpecs;
-import org.junit.jupiter.api.Test;
+import nbankApi.iteration2.middle.support.steps.SetupSteps;
+import nbankApi.iteration2.middle.support.steps.TransferParticipants;
+import nbankApi.iteration2.middle.support.steps.UserWithAccount;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static nbankApi.iteration2.middle.constants.ApiConstants.*;
-
-import java.util.HashMap;
-import java.util.Map;
+import static nbankApi.iteration2.middle.enums.AccountSelector.*;
+import static nbankApi.iteration2.middle.enums.ExpectedError.BAD_REQUEST;
+import static nbankApi.iteration2.middle.enums.ExpectedError.FORBIDDEN;
+import static nbankApi.iteration2.middle.enums.RequestAuth.AUTHORIZED;
+import static nbankApi.iteration2.middle.enums.TransferDirection.BETWEEN_OWN_ACCOUNTS;
+import static nbankApi.iteration2.middle.enums.TransferDirection.TO_ANOTHER_USER;
 
 public class TransferFromOneAccountToAnotherTest extends BaseTest {
 
-    private static final double SETUP_DEPOSIT_AMOUNT = 5000.00;
-    private static final double BASE_TRANSFER_AMOUNT = 100.00;
-    private static final int DEPOSITS_COUNT = 3;
-    private static final double INITIAL_BALANCE_FOR_BOUNDARY_TEST = SETUP_DEPOSIT_AMOUNT * DEPOSITS_COUNT;
+    private static final double REGULAR_TRANSFER_AMOUNT = 100.00;
+    private static final double MIN_TRANSFER_AMOUNT = 0.01;
+    private static final double MAX_TRANSFER_AMOUNT = 10000.00;
+    private static final double MAX_TRANSFER_AMOUNT_MINUS_CENT = 9999.99;
+    private static final double MAX_TRANSFER_AMOUNT_PLUS_CENT = 10000.01;
+    private static final double AMOUNT_EXCEEDING_ONE_DEPOSIT_BALANCE = SETUP_DEPOSIT_AMOUNT + 10;
 
-    private static final double MAX_TRANSFER_LIMIT = 10000.00;
-    private static final double MAX_TRANSFER_LIMIT_MINUS_STEP = 9999.99;
-    private static final double MIN_TRANSFER_LIMIT = 0.01;
+    private static Stream<Arguments> validTransferCases() {
+        return Stream.of(
+                // caseName                                  transferAmount                   transferDirection
+                Arguments.of("typical: to another user", REGULAR_TRANSFER_AMOUNT, TO_ANOTHER_USER),
+                Arguments.of("typical: between own accounts", REGULAR_TRANSFER_AMOUNT, BETWEEN_OWN_ACCOUNTS),
+                Arguments.of("boundary: min amount", MIN_TRANSFER_AMOUNT, TO_ANOTHER_USER),
+                Arguments.of("boundary: max amount", MAX_TRANSFER_AMOUNT, TO_ANOTHER_USER),
+                Arguments.of("boundary: max amount minus 0.01", MAX_TRANSFER_AMOUNT_MINUS_CENT, TO_ANOTHER_USER)
+        );
+    }
 
-    private static final double MAX_TRANSFER_LIMIT_PLUS_STEP = 10000.01;
-    private static final double EXCEEDING_AMOUNT_BALANCE = SETUP_DEPOSIT_AMOUNT + 10;
+    @ParameterizedTest(name = "{0} ({1})")
+    @MethodSource("validTransferCases")
+    public void shouldTransferWhenRequestIsValid(String caseName, double transferAmount,
+                                                 TransferDirection transferDirection) {
+        TransferParticipants participants = transferDirection.prepareParticipants(adminToken);
 
-    @Test
-    public void shouldTransferToAnotherUserSuccessfullyWhenAllDataValid() {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(sender.getAccount().getId())
-                .receiverAccountId(receiver.getAccount().getId())
-                .amount(BASE_TRANSFER_AMOUNT)
+        AccountTransferRequestDto transferDto = AccountTransferRequestDto.builder()
+                .senderAccountId(participants.senderAccountId())
+                .receiverAccountId(participants.receiverAccountId())
+                .amount(transferAmount)
                 .build();
 
-        var response = new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
+        var transferResponse = new AccountTransferRequest(
+                RequestSpecs.authSpec(participants.senderToken()),
                 ResponseSpecs.successOk())
-                .post(transferRequestDto);
+                .post(transferDto);
 
-        TransferAssertions.assertTransferResponse(
-                softly, response, sender.getAccount().getId(),
-                BASE_TRANSFER_AMOUNT, receiver.getAccount().getId());
+        TransferAssertions.assertTransferResponse(softly, transferResponse,
+                participants.senderAccountId(), transferAmount, participants.receiverAccountId());
 
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(),
-                SETUP_DEPOSIT_AMOUNT - BASE_TRANSFER_AMOUNT);
+        AccountAssertions.assertAccountBalance(softly, participants.senderToken(),
+                participants.senderAccountId(), participants.senderInitialBalance() - transferAmount);
+        AccountAssertions.assertAccountBalance(softly, participants.receiverToken(),
+                participants.receiverAccountId(), participants.receiverInitialBalance() + transferAmount);
 
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(),
-                BASE_TRANSFER_AMOUNT);
-
-        TransactionAssertions.assertTransactionOut(
-                softly, sender.getToken(), sender.getAccount().getId(),
-                BASE_TRANSFER_AMOUNT, receiver.getAccount().getId());
-
-        TransactionAssertions.assertTransactionIn(
-                softly, receiver.getToken(), receiver.getAccount().getId(),
-                BASE_TRANSFER_AMOUNT, sender.getAccount().getId());
+        TransactionAssertions.assertTransferOutTransaction(softly, participants.senderToken(),
+                participants.senderAccountId(), transferAmount, participants.receiverAccountId());
+        TransactionAssertions.assertTransferInTransaction(softly, participants.receiverToken(),
+                participants.receiverAccountId(), transferAmount, participants.senderAccountId());
     }
 
-    @Test
-    public void shouldTransferBetweenOwnAccountsSuccessfullyWhenAllDateValid() {
-        var customer = SetupSteps.createCustomerWithTwoAccounts(adminToken, SETUP_DEPOSIT_AMOUNT);
+    private static Stream<Arguments> invalidTransferCases() {
+        return Stream.of(
+                // caseName                                 transferAmount                     currentUserDepositsCount  senderAccount   receiverAccount   requestAuth   expectedError
+                Arguments.of("400: max amount plus 0.01", MAX_TRANSFER_AMOUNT_PLUS_CENT, SETUP_DEPOSITS_COUNT, OWN_ACCOUNT, ANOTHER_USER_ACCOUNT, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: zero amount", ZERO_AMOUNT, SETUP_DEPOSITS_COUNT, OWN_ACCOUNT, ANOTHER_USER_ACCOUNT, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: negative amount", NEGATIVE_AMOUNT, SETUP_DEPOSITS_COUNT, OWN_ACCOUNT, ANOTHER_USER_ACCOUNT, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: amount exceeds sender balance", AMOUNT_EXCEEDING_ONE_DEPOSIT_BALANCE, ONE_DEPOSIT, OWN_ACCOUNT, ANOTHER_USER_ACCOUNT, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: receiver account does not exist", REGULAR_TRANSFER_AMOUNT, ONE_DEPOSIT, OWN_ACCOUNT, NON_EXISTENT_ACCOUNT, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: sender and receiver are the same account", REGULAR_TRANSFER_AMOUNT, ONE_DEPOSIT, OWN_ACCOUNT, OWN_ACCOUNT, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("403: transfer from another user's account", REGULAR_TRANSFER_AMOUNT, ONE_DEPOSIT, ANOTHER_USER_ACCOUNT, OWN_ACCOUNT, AUTHORIZED, FORBIDDEN),
+                Arguments.of("403: sender account does not exist", REGULAR_TRANSFER_AMOUNT, ONE_DEPOSIT, NON_EXISTENT_ACCOUNT, OWN_ACCOUNT, AUTHORIZED, FORBIDDEN),
+                Arguments.of("401: request without token", REGULAR_TRANSFER_AMOUNT, ONE_DEPOSIT, OWN_ACCOUNT, ANOTHER_USER_ACCOUNT, RequestAuth.UNAUTHORIZED, ExpectedError.UNAUTHORIZED)
+        );
+    }
 
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(customer.getAccount1().getId())
-                .receiverAccountId(customer.getAccount2().getId())
-                .amount(BASE_TRANSFER_AMOUNT)
+    @ParameterizedTest(name = "{0} ({1})")
+    @MethodSource("invalidTransferCases")
+    public void shouldNotTransferWhenRequestIsInvalid(String caseName, double transferAmount, int currentUserDepositsCount,
+                                                      AccountSelector senderAccount, AccountSelector receiverAccount,
+                                                      RequestAuth requestAuth, ExpectedError expectedError) {
+        UserWithAccount currentUser = SetupSteps.createUserWithFundedAccount(adminToken, SETUP_DEPOSIT_AMOUNT, currentUserDepositsCount);
+        UserWithAccount anotherUser = SetupSteps.createUserWithFundedAccount(adminToken, SETUP_DEPOSIT_AMOUNT, ONE_DEPOSIT);
+        double currentUserInitialBalance = SETUP_DEPOSIT_AMOUNT * currentUserDepositsCount;
+        double anotherUserInitialBalance = SETUP_DEPOSIT_AMOUNT * ONE_DEPOSIT;
+
+        int ownAccountId = currentUser.getAccount().getId();
+        int anotherUserAccountId = anotherUser.getAccount().getId();
+
+        AccountTransferRequestDto transferDto = AccountTransferRequestDto.builder()
+                .senderAccountId(senderAccount.selectAccountId(ownAccountId, anotherUserAccountId))
+                .receiverAccountId(receiverAccount.selectAccountId(ownAccountId, anotherUserAccountId))
+                .amount(transferAmount)
                 .build();
 
-        var response = new AccountTransferRequest(
-                RequestSpecs.authSpec(customer.getToken()),
-                ResponseSpecs.successOk())
-                .post(transferRequestDto);
-
-        TransferAssertions.assertTransferResponse(
-                softly, response, customer.getAccount1().getId(),
-                BASE_TRANSFER_AMOUNT, customer.getAccount2().getId());
-
-        AccountAssertions.assertAccountBalance(
-                softly, customer.getToken(), customer.getAccount1().getId(),
-                SETUP_DEPOSIT_AMOUNT - BASE_TRANSFER_AMOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, customer.getToken(), customer.getAccount2().getId(),
-                BASE_TRANSFER_AMOUNT);
-
-        TransactionAssertions.assertTransactionOut(
-                softly, customer.getToken(), customer.getAccount1().getId(),
-                BASE_TRANSFER_AMOUNT, customer.getAccount2().getId());
-
-        TransactionAssertions.assertTransactionIn(
-                softly, customer.getToken(), customer.getAccount2().getId(),
-                BASE_TRANSFER_AMOUNT, customer.getAccount1().getId());
-    }
-
-    @ParameterizedTest
-    @ValueSource(doubles = {
-            MAX_TRANSFER_LIMIT,
-            MAX_TRANSFER_LIMIT_MINUS_STEP,
-            MIN_TRANSFER_LIMIT
-    })
-    public void shouldTransferToAccountSuccessfullyWhenValidBoundaryValues(double amount) {
-        var sender = SetupSteps.createAndFundAccountMultipleTimes(adminToken, SETUP_DEPOSIT_AMOUNT, DEPOSITS_COUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(sender.getAccount().getId())
-                .receiverAccountId(receiver.getAccount().getId())
-                .amount(amount)
-                .build();
-
-        var response = new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.successOk())
-                .post(transferRequestDto);
-
-        TransferAssertions.assertTransferResponse(
-                softly, response, sender.getAccount().getId(), amount, receiver.getAccount().getId());
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(),
-                INITIAL_BALANCE_FOR_BOUNDARY_TEST - amount);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), amount);
-
-        TransactionAssertions.assertTransactionOut(
-                softly, sender.getToken(), sender.getAccount().getId(),
-                amount, receiver.getAccount().getId());
-
-        TransactionAssertions.assertTransactionIn(
-                softly, receiver.getToken(), receiver.getAccount().getId(),
-                amount, sender.getAccount().getId());
-    }
-
-    @ParameterizedTest
-    @ValueSource(doubles = {
-            MAX_TRANSFER_LIMIT_PLUS_STEP,
-            ZERO_AMOUNT,
-            NEGATIVE_AMOUNT
-    })
-    public void shouldReturn400TransferWithInvalidBoundaryValues(double amount) {
-        var sender = SetupSteps.createAndFundAccountMultipleTimes(adminToken, SETUP_DEPOSIT_AMOUNT, DEPOSITS_COUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(sender.getAccount().getId())
-                .receiverAccountId(receiver.getAccount().getId())
-                .amount(amount)
-                .build();
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.badRequest())
-                .post(transferRequestDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), INITIAL_BALANCE_FOR_BOUNDARY_TEST);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WhenTransferAmountExceedingCurrentBalance() {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(sender.getAccount().getId())
-                .receiverAccountId(receiver.getAccount().getId())
-                .amount(EXCEEDING_AMOUNT_BALANCE)
-                .build();
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.badRequest())
-                .post(transferRequestDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {
-            AMOUNT_AS_STRING,
-            AMOUNT_AS_NUMERIC_STRING
-    })
-    public void shouldReturn400ForInvalidDataTypeInAmountField(String amount) {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        Map<String, Object> transferBody = new HashMap<>();
-        transferBody.put("senderAccountId", sender.getAccount().getId());
-        transferBody.put("receiverAccountId", receiver.getAccount().getId());
-        transferBody.put("amount", amount);
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.badRequest())
-                .post(transferBody);
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @Test
-    public void shouldReturn403WhenTransferFromAnotherUserAccount() {
-        var userA = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-        var userB = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(userB.getAccount().getId())
-                .receiverAccountId(userA.getAccount().getId())
-                .amount(BASE_TRANSFER_AMOUNT)
-                .build();
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(userA.getToken()),
-                ResponseSpecs.forbidden())
-                .post(transferRequestDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, userA.getToken(), userA.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, userB.getToken(), userB.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-    }
-
-    @Test
-    public void shouldReturn403WhenSenderAccountIdIsNotExist() {
-        var receiver = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(NON_EXISTENT_USER_ID)
-                .receiverAccountId(receiver.getAccount().getId())
-                .amount(BASE_TRANSFER_AMOUNT)
-                .build();
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(receiver.getToken()),
-                ResponseSpecs.forbidden())
-                .post(transferRequestDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WhenReceiverAccountIdIsNotExist() {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(sender.getAccount().getId())
-                .receiverAccountId(NON_EXISTENT_USER_ID)
-                .amount(BASE_TRANSFER_AMOUNT)
-                .build();
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.badRequest())
-                .post(transferRequestDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-    }
-
-    @Test
-    public void shouldReturn401WhenSenderUnauthorized() {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(sender.getAccount().getId())
-                .receiverAccountId(receiver.getAccount().getId())
-                .amount(BASE_TRANSFER_AMOUNT)
-                .build();
-
-        new AccountTransferRequest(
-                RequestSpecs.unauthSpec(),
-                ResponseSpecs.unauth()).post(transferRequestDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WhenSenderIdAndReceiverIdTheSame() {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-
-        AccountTransferRequestDto transferRequestDto = AccountTransferRequestDto.builder()
-                .senderAccountId(sender.getAccount().getId())
-                .receiverAccountId(sender.getAccount().getId())
-                .amount(BASE_TRANSFER_AMOUNT)
-                .build();
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.badRequest())
-                .post(transferRequestDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WhenRequestWithoutAmountFieldInBody() {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-
-        Map<String, Object> transferBody = new HashMap<>();
-        transferBody.put("senderAccountId", sender.getAccount().getId());
-        transferBody.put("receiverAccountId", receiver.getAccount().getId());
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.badRequest())
-                .post(transferBody);
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WhenRequestWithoutSenderAccountIdFieldInBody() {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-
-        Map<String, Object> transferBody = new HashMap<>();
-        transferBody.put("receiverAccountId", receiver.getAccount().getId());
-        transferBody.put("amount", BASE_TRANSFER_AMOUNT);
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.badRequest())
-                .post(transferBody);
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WhenRequestWithoutReceiverAccountIdFieldInBody() {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-
-        Map<String, Object> transferBody = new HashMap<>();
-        transferBody.put("senderAccountId", sender.getAccount().getId());
-        transferBody.put("amount", BASE_TRANSFER_AMOUNT);
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.badRequest())
-                .post(transferBody);
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WhenRequestWithoutBody() {
-        var sender = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-        var receiver = SetupSteps.createAndFundAccount(adminToken, SETUP_DEPOSIT_AMOUNT);
-
-        new AccountTransferRequest(
-                RequestSpecs.authSpec(sender.getToken()),
-                ResponseSpecs.badRequest())
-                .post();
-
-        AccountAssertions.assertAccountBalance(
-                softly, sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, receiver.getToken(), receiver.getAccount().getId(), SETUP_DEPOSIT_AMOUNT);
+        new AccountTransferRequest(requestAuth.requestSpec(currentUser.getToken()), expectedError.responseSpec())
+                .post(transferDto);
+
+        AccountAssertions.assertAccountBalance(softly, currentUser.getToken(), ownAccountId, currentUserInitialBalance);
+        AccountAssertions.assertAccountBalance(softly, anotherUser.getToken(), anotherUserAccountId, anotherUserInitialBalance);
     }
 }

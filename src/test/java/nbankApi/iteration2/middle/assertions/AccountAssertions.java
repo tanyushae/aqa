@@ -2,7 +2,7 @@ package nbankApi.iteration2.middle.assertions;
 
 import io.restassured.common.mapper.TypeRef;
 import nbankApi.iteration2.middle.models.account.CustomerAccountResponseDto;
-import nbankApi.iteration2.middle.requests.account.GetCustomerAccountRequest;
+import nbankApi.iteration2.middle.requests.account.GetCustomerAccountsRequest;
 import nbankApi.iteration2.middle.specs.RequestSpecs;
 import nbankApi.iteration2.middle.specs.ResponseSpecs;
 import org.assertj.core.api.SoftAssertions;
@@ -13,7 +13,7 @@ public class AccountAssertions {
 
     public static void assertAccountBalance(SoftAssertions softly, String userToken,
                                             int accountId, double expectedBalance) {
-        List<CustomerAccountResponseDto> accounts = new GetCustomerAccountRequest(
+        List<CustomerAccountResponseDto> accounts = new GetCustomerAccountsRequest(
                 RequestSpecs.authSpec(userToken),
                 ResponseSpecs.successOk()
         )
@@ -23,7 +23,7 @@ public class AccountAssertions {
                 });
 
         CustomerAccountResponseDto account = accounts.stream()
-                .filter(acc -> acc.getId() == accountId)
+                .filter(userAccount -> userAccount.getId() == accountId)
                 .findFirst()
                 .orElse(null);
 

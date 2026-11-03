@@ -6,7 +6,7 @@ public class TestDataGenerator {
     private TestDataGenerator() {
     }
 
-    public static String generateUserName(String prefix) {
+    public static String generateUniqueUsername(String prefix) {
         return prefix + UUID.randomUUID().toString().substring(0, 4);
 
     }

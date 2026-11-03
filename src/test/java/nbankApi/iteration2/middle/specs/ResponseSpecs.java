@@ -38,7 +38,7 @@ public class ResponseSpecs {
                 .build();
     }
 
-    public static ResponseSpecification unauth() {
+    public static ResponseSpecification unauthorized() {
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_UNAUTHORIZED)
                 .build();

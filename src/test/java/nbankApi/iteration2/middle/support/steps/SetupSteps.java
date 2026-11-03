@@ -1,55 +1,56 @@
 package nbankApi.iteration2.middle.support.steps;
 
 import io.restassured.response.ValidatableResponse;
+import nbankApi.iteration2.middle.enums.UserRole;
 import nbankApi.iteration2.middle.generators.TestDataGenerator;
+import nbankApi.iteration2.middle.models.account.CustomerAccountResponseDto;
 import nbankApi.iteration2.middle.models.admin.AdminCreateUserRequestDto;
 import nbankApi.iteration2.middle.models.admin.AdminLoginRequestDto;
 import nbankApi.iteration2.middle.models.deposit.DepositRequestDto;
 import nbankApi.iteration2.middle.models.profile.UpdateCustomerProfileRequestDto;
-import nbankApi.iteration2.middle.enums.UserRole;
-import nbankApi.iteration2.middle.models.account.CustomerAccountResponseDto;
 import nbankApi.iteration2.middle.requests.admin.AdminCreateUserRequest;
 import nbankApi.iteration2.middle.requests.admin.AdminLoginRequest;
-import nbankApi.iteration2.middle.requests.user.UserCreateAccountRequest;
 import nbankApi.iteration2.middle.requests.deposit.DepositRequest;
 import nbankApi.iteration2.middle.requests.profile.GetCustomerProfileRequest;
 import nbankApi.iteration2.middle.requests.profile.UpdateCustomerProfileRequest;
+import nbankApi.iteration2.middle.requests.user.UserCreateAccountRequest;
 import nbankApi.iteration2.middle.specs.RequestSpecs;
 import nbankApi.iteration2.middle.specs.ResponseSpecs;
 import nbankApi.iteration2.middle.tests.BaseTest;
 
 import static nbankApi.iteration2.middle.constants.ApiConstants.*;
-
 import static org.hamcrest.Matchers.equalTo;
 
 public class SetupSteps {
 
+    private static final String ADMIN_USERNAME = "admin";
+    private static final String ADMIN_PASSWORD = "admin";
+    private static final String USERNAME_PREFIX = "user_";
+
     public static String getAdminToken() {
-        AdminLoginRequestDto adminDto = new AdminLoginRequestDto("admin", "admin");
+        AdminLoginRequestDto adminLoginDto = new AdminLoginRequestDto(ADMIN_USERNAME, ADMIN_PASSWORD);
         return new AdminLoginRequest(RequestSpecs.unauthSpec(), ResponseSpecs.successOk())
-                .post(adminDto)
+                .post(adminLoginDto)
                 .extract()
                 .response()
                 .header("Authorization");
     }
 
     public static String createUserAndGetToken(String adminToken) {
-        String username = TestDataGenerator.generateUserName("user_");
-        AdminCreateUserRequestDto createUserDto = new AdminCreateUserRequestDto(username, VALID_PASSWORD, UserRole.USER);
+        String username = TestDataGenerator.generateUniqueUsername(USERNAME_PREFIX);
+        AdminCreateUserRequestDto createUserDto = new AdminCreateUserRequestDto(username, USER_PASSWORD, UserRole.USER);
 
-        ValidatableResponse response = new AdminCreateUserRequest(
+        ValidatableResponse createUserResponse = new AdminCreateUserRequest(
                 RequestSpecs.authSpec(adminToken),
                 ResponseSpecs.successCreated())
                 .post(createUserDto);
 
-        String userToken = response.extract().header("Authorization");
-        int userId = getCustomerId(userToken);
-        BaseTest.trackUser(userId);
-
+        String userToken = createUserResponse.extract().header("Authorization");
+        BaseTest.registerUserForCleanup(getUserIdByToken(userToken));
         return userToken;
     }
 
-    public static int getCustomerId(String userToken) {
+    public static int getUserIdByToken(String userToken) {
         return new GetCustomerProfileRequest(RequestSpecs.authSpec(userToken), ResponseSpecs.successOk())
                 .get()
                 .extract()
@@ -65,49 +66,58 @@ public class SetupSteps {
                 .as(CustomerAccountResponseDto.class);
     }
 
-    public static CustomerWithAccount createAndFundAccount(String adminToken, double depositAmount) {
-        return createAndFundAccountMultipleTimes(adminToken, depositAmount, 1);
-    }
-
-    public static CustomerWithTwoAccounts createCustomerWithTwoAccounts(String adminToken, double depositAmount) {
-        String userToken = createUserAndGetToken(adminToken);
-
-        CustomerAccountResponseDto account1 = createAccount(userToken);
-        if (depositAmount > 0) {
-            DepositRequestDto depositDto = new DepositRequestDto(account1.getId(), depositAmount);
+    public static void depositToAccount(String userToken, int accountId, double depositAmount, int depositsCount) {
+        DepositRequestDto depositDto = new DepositRequestDto(accountId, depositAmount);
+        for (int depositNumber = 0; depositNumber < depositsCount; depositNumber++) {
             new DepositRequest(RequestSpecs.authSpec(userToken), ResponseSpecs.successOk())
                     .post(depositDto);
         }
-
-        CustomerAccountResponseDto account2 = createAccount(userToken);
-
-        return new CustomerWithTwoAccounts(userToken, account1, account2);
     }
 
-    public static CustomerWithAccount createAndFundAccountMultipleTimes(String adminToken, double depositAmount, int times) {
+    public static UserWithAccount createUserWithEmptyAccount(String adminToken) {
         String userToken = createUserAndGetToken(adminToken);
-        CustomerAccountResponseDto account = createAccount(userToken);
-
-        if (depositAmount > 0 && times > 0) {
-            DepositRequestDto depositDto = new DepositRequestDto(account.getId(), depositAmount);
-            for (int i = 0; i < times; i++) {
-                new DepositRequest(RequestSpecs.authSpec(userToken), ResponseSpecs.successOk())
-                        .post(depositDto);
-            }
-        }
-        return new CustomerWithAccount(userToken, account);
+        return new UserWithAccount(userToken, createAccount(userToken));
     }
 
-    public static String createUserWithValidProfileName(String adminToken) {
-        String userToken = createUserAndGetToken(adminToken);
-        int userId = getCustomerId(userToken);
+    public static UserWithAccount createUserWithFundedAccount(String adminToken, double depositAmount, int depositsCount) {
+        UserWithAccount user = createUserWithEmptyAccount(adminToken);
+        depositToAccount(user.getToken(), user.getAccount().getId(), depositAmount, depositsCount);
+        return user;
+    }
 
-        UpdateCustomerProfileRequestDto profileDto = new UpdateCustomerProfileRequestDto(VALID_DEFAULT_PROFILE_NAME);
+    public static UserWithTwoAccounts createUserWithTwoAccounts(String adminToken,
+                                                                double firstAccountDepositAmount,
+                                                                int firstAccountDepositsCount) {
+        UserWithAccount user = createUserWithFundedAccount(adminToken, firstAccountDepositAmount, firstAccountDepositsCount);
+        CustomerAccountResponseDto secondAccount = createAccount(user.getToken());
+        return new UserWithTwoAccounts(user.getToken(), user.getAccount(), secondAccount);
+    }
+
+    public static TransferParticipants prepareTransferToAnotherUser(String adminToken) {
+        UserWithAccount sender = createUserWithFundedAccount(adminToken, SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSITS_COUNT);
+        UserWithAccount receiver = createUserWithEmptyAccount(adminToken);
+        return new TransferParticipants(
+                sender.getToken(), sender.getAccount().getId(), SETUP_DEPOSIT_AMOUNT * SETUP_DEPOSITS_COUNT,
+                receiver.getToken(), receiver.getAccount().getId(), NEW_ACCOUNT_BALANCE);
+    }
+
+    public static TransferParticipants prepareTransferBetweenOwnAccounts(String adminToken) {
+        UserWithTwoAccounts user = createUserWithTwoAccounts(adminToken, SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSITS_COUNT);
+        return new TransferParticipants(
+                user.getToken(), user.getFirstAccount().getId(), SETUP_DEPOSIT_AMOUNT * SETUP_DEPOSITS_COUNT,
+                user.getToken(), user.getSecondAccount().getId(), NEW_ACCOUNT_BALANCE);
+    }
+
+    public static String createUserWithDefaultProfileName(String adminToken) {
+        String userToken = createUserAndGetToken(adminToken);
+        int userId = getUserIdByToken(userToken);
+
+        UpdateCustomerProfileRequestDto updateProfileDto = new UpdateCustomerProfileRequestDto(DEFAULT_PROFILE_NAME);
         new UpdateCustomerProfileRequest(RequestSpecs.authSpec(userToken), ResponseSpecs.successOk())
-                .put(profileDto)
+                .put(updateProfileDto)
                 .body("message", equalTo("Profile updated successfully"))
                 .body("customer.id", equalTo(userId))
-                .body("customer.name", equalTo(VALID_DEFAULT_PROFILE_NAME));
+                .body("customer.name", equalTo(DEFAULT_PROFILE_NAME));
         return userToken;
     }
 }

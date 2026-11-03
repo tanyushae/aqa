@@ -1,129 +1,93 @@
 package nbankApi.iteration2.middle.tests;
 
-import nbankApi.iteration2.middle.support.steps.SetupSteps;
 import nbankApi.iteration2.middle.assertions.ProfileAssertions;
+import nbankApi.iteration2.middle.enums.ExpectedError;
+import nbankApi.iteration2.middle.enums.RequestAuth;
 import nbankApi.iteration2.middle.models.profile.UpdateCustomerProfileRequestDto;
 import nbankApi.iteration2.middle.requests.profile.UpdateCustomerProfileRequest;
 import nbankApi.iteration2.middle.specs.RequestSpecs;
 import nbankApi.iteration2.middle.specs.ResponseSpecs;
+import nbankApi.iteration2.middle.support.steps.SetupSteps;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static nbankApi.iteration2.middle.constants.ApiConstants.*;
+import java.util.stream.Stream;
+
+import static nbankApi.iteration2.middle.constants.ApiConstants.DEFAULT_PROFILE_NAME;
+import static nbankApi.iteration2.middle.enums.ExpectedError.BAD_REQUEST;
+import static nbankApi.iteration2.middle.enums.RequestAuth.AUTHORIZED;
 
 public class ProfileNameUpdateTest extends BaseTest {
 
-    private static final String VALID_PROFILE_NAME = "New Name";
-    private static final String VALID_PROFILE_RENAME = "New ReName";
-    private static final String VALID_PROFILE_CYRILLIC_NAME = "Иван Иванов";
-    private static final String INVALID_PROFILE_NAME_ONE_WORD_ONLY = "NewName";
+    private static final String VALID_PROFILE_NAME_LATIN = "New Name";
+    private static final String VALID_PROFILE_NAME_WITH_INNER_UPPERCASE = "New ReName";
+    private static final String VALID_PROFILE_NAME_CYRILLIC = "Иван Иванов";
+    private static final String INVALID_PROFILE_NAME_ONE_WORD = "NewName";
     private static final String INVALID_PROFILE_NAME_THREE_WORDS = "New Name Name";
-    private static final String INVALID_PROFILE_NAME_AS_EMPTY_STRING = "";
+    private static final String INVALID_PROFILE_NAME_EMPTY = "";
     private static final String INVALID_PROFILE_NAME_WITH_DIGITS = "Lena2 Rect";
-    private static final String INVALID_PROFILE_NAME_WITH_CHARACTER = "Ivan-Petrov";
+    private static final String INVALID_PROFILE_NAME_WITH_HYPHEN = "Ivan-Petrov";
 
     private String userToken;
     private int userId;
 
     @BeforeEach
-    public void setUp() {
-        userToken = SetupSteps.createUserAndGetToken(adminToken);
-        userId = SetupSteps.getCustomerId(userToken);
+    public void prepareUserWithDefaultProfileName() {
+        userToken = SetupSteps.createUserWithDefaultProfileName(adminToken);
+        userId = SetupSteps.getUserIdByToken(userToken);
     }
 
-    @Test
-    public void shouldSuccessfullyUpdateValidProfileName() {
-        UpdateCustomerProfileRequestDto profileDto = UpdateCustomerProfileRequestDto.builder()
-                .name(VALID_DEFAULT_PROFILE_NAME)
+    private static Stream<Arguments> validProfileNameUpdateCases() {
+        return Stream.of(
+                // caseName                                       validProfileName
+                Arguments.of("typical: Latin first and last name", VALID_PROFILE_NAME_LATIN),
+                Arguments.of("format: uppercase letter inside word", VALID_PROFILE_NAME_WITH_INNER_UPPERCASE),
+                Arguments.of("format: Cyrillic first and last name", VALID_PROFILE_NAME_CYRILLIC)
+        );
+    }
+
+    @ParameterizedTest(name = "{0} ({1})")
+    @MethodSource("validProfileNameUpdateCases")
+    public void shouldUpdateProfileNameWhenNameIsValid(String caseName, String validProfileName) {
+        UpdateCustomerProfileRequestDto updateProfileDto = UpdateCustomerProfileRequestDto.builder()
+                .name(validProfileName)
                 .build();
 
-        var response = new UpdateCustomerProfileRequest(
+        var updateProfileResponse = new UpdateCustomerProfileRequest(
                 RequestSpecs.authSpec(userToken),
                 ResponseSpecs.successOk())
-                .put(profileDto);
+                .put(updateProfileDto);
 
-        ProfileAssertions.assertProfileUpdateResponse(softly, response, userId, VALID_DEFAULT_PROFILE_NAME);
-        ProfileAssertions.assertUserProfile(softly, userToken, userId, VALID_DEFAULT_PROFILE_NAME);
+        ProfileAssertions.assertProfileUpdateResponse(softly, updateProfileResponse, userId, validProfileName);
+        ProfileAssertions.assertStoredProfile(softly, userToken, userId, validProfileName);
     }
 
-    @ParameterizedTest(name = "Case #{index}: successful update to valid name: \"{0}\"")
-    @ValueSource(strings = {
-            VALID_PROFILE_NAME,
-            VALID_PROFILE_RENAME,
-            VALID_PROFILE_CYRILLIC_NAME
-    })
-    public void shouldSuccessfullyUpdateValidProfileName(String newProfileName) {
-        UpdateCustomerProfileRequestDto profileDto = UpdateCustomerProfileRequestDto.builder()
-                .name(newProfileName)
-                .build();
-
-        var response = new UpdateCustomerProfileRequest(
-                RequestSpecs.authSpec(userToken),
-                ResponseSpecs.successOk())
-                .put(profileDto);
-
-        ProfileAssertions.assertProfileUpdateResponse(softly, response, userId, newProfileName);
-        ProfileAssertions.assertUserProfile(softly, userToken, userId, newProfileName);
+    private static Stream<Arguments> invalidProfileNameUpdateCases() {
+        return Stream.of(
+                // caseName                        profileName                          requestAuth               expectedError
+                Arguments.of("400: null name", null, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: name of one word", INVALID_PROFILE_NAME_ONE_WORD, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: name of three words", INVALID_PROFILE_NAME_THREE_WORDS, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: empty name", INVALID_PROFILE_NAME_EMPTY, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: digits in name", INVALID_PROFILE_NAME_WITH_DIGITS, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: hyphen in name", INVALID_PROFILE_NAME_WITH_HYPHEN, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("401: request without token", VALID_PROFILE_NAME_LATIN, RequestAuth.UNAUTHORIZED, ExpectedError.UNAUTHORIZED)
+        );
     }
 
-    @ParameterizedTest(name = "Case #{index}: fail to update profile with invalid name: \"{0}\"")
-    @NullSource
-    @ValueSource(strings = {
-            INVALID_PROFILE_NAME_ONE_WORD_ONLY,
-            INVALID_PROFILE_NAME_THREE_WORDS,
-            INVALID_PROFILE_NAME_AS_EMPTY_STRING,
-            INVALID_PROFILE_NAME_WITH_DIGITS,
-            INVALID_PROFILE_NAME_WITH_CHARACTER
-    })
-    public void shouldReturn400WhenInvalidProfileName(String invalidProfileName) {
-        userToken = SetupSteps.createUserWithValidProfileName(adminToken);
-        userId = SetupSteps.getCustomerId(userToken);
-
-        UpdateCustomerProfileRequestDto invalidDto = UpdateCustomerProfileRequestDto.builder()
-                .name(invalidProfileName)
+    @ParameterizedTest(name = "{0} ({1})")
+    @MethodSource("invalidProfileNameUpdateCases")
+    public void shouldNotUpdateProfileNameWhenRequestIsInvalid(String caseName, String profileName,
+                                                               RequestAuth requestAuth, ExpectedError expectedError) {
+        UpdateCustomerProfileRequestDto updateProfileDto = UpdateCustomerProfileRequestDto.builder()
+                .name(profileName)
                 .build();
 
-        new UpdateCustomerProfileRequest(
-                RequestSpecs.authSpec(userToken),
-                ResponseSpecs.badRequest())
-                .put(invalidDto);
+        new UpdateCustomerProfileRequest(requestAuth.requestSpec(userToken), expectedError.responseSpec())
+                .put(updateProfileDto);
 
-        ProfileAssertions.assertUserProfile(softly, userToken, userId, VALID_DEFAULT_PROFILE_NAME);
-    }
-
-    @Test
-    public void shouldReturn403WhenUnauthorizedUser() {
-        userToken = SetupSteps.createUserWithValidProfileName(adminToken);
-        userId = SetupSteps.getCustomerId(userToken);
-
-        UpdateCustomerProfileRequestDto unauthDto = UpdateCustomerProfileRequestDto.builder()
-                .name(VALID_PROFILE_NAME)
-                .build();
-
-        new UpdateCustomerProfileRequest(
-                RequestSpecs.unauthSpec(),
-                ResponseSpecs.unauth())
-                .put(unauthDto);
-
-        ProfileAssertions.assertUserProfile(softly, userToken, userId, VALID_DEFAULT_PROFILE_NAME);
-    }
-
-    @Test
-    public void shouldReturn400WhenRequestWithoutNameFieldInBody() {
-        userToken = SetupSteps.createUserWithValidProfileName(adminToken);
-        userId = SetupSteps.getCustomerId(userToken);
-
-        UpdateCustomerProfileRequestDto emptyDto = UpdateCustomerProfileRequestDto.builder()
-                .build();
-
-        new UpdateCustomerProfileRequest(
-                RequestSpecs.authSpec(userToken),
-                ResponseSpecs.badRequest())
-                .put(emptyDto);
-
-        ProfileAssertions.assertUserProfile(softly, userToken, userId, VALID_DEFAULT_PROFILE_NAME);
+        ProfileAssertions.assertStoredProfile(softly, userToken, userId, DEFAULT_PROFILE_NAME);
     }
 }

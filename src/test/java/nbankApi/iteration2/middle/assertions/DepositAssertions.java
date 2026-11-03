@@ -17,7 +17,6 @@ public class DepositAssertions {
                 .isNotNull();
 
         if (responseDto != null) {
-
             softly.assertThat(responseDto.getId())
                     .as("Check account ID in deposit response")
                     .isEqualTo(expectedAccountId);
@@ -30,14 +29,21 @@ public class DepositAssertions {
                     .as("Transactions list in deposit response should not be empty")
                     .isNotEmpty();
 
-            if (responseDto.getTransactions() != null) {
-                softly.assertThat(responseDto.getTransactions())
-                        .as("Response should contain a deposit transaction with specified parameters")
-                        .anySatisfy(transaction -> {
-                            softly.assertThat(transaction.getType()).isEqualTo(TransactionType.DEPOSIT);
-                            softly.assertThat(transaction.getAmount()).isEqualTo(expectedDepositAmount);
-                            softly.assertThat(transaction.getRelatedAccountId()).isEqualTo(expectedAccountId);
-                        });
+            if (responseDto.getTransactions() != null && !responseDto.getTransactions().isEmpty()) {
+                var latestTransaction = responseDto.getTransactions()
+                        .get(responseDto.getTransactions().size() - 1);
+
+                softly.assertThat(latestTransaction.getType())
+                        .as("Latest transaction type should be DEPOSIT")
+                        .isEqualTo(TransactionType.DEPOSIT);
+
+                softly.assertThat(latestTransaction.getAmount())
+                        .as("Latest transaction amount should match requested deposit amount")
+                        .isEqualTo(expectedDepositAmount);
+
+                softly.assertThat(latestTransaction.getRelatedAccountId())
+                        .as("Latest transaction account ID should match expected account")
+                        .isEqualTo(expectedAccountId);
             }
         }
     }

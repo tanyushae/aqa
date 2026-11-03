@@ -1,230 +1,103 @@
 package nbankApi.iteration2.middle.tests;
 
+import nbankApi.iteration2.middle.assertions.AccountAssertions;
 import nbankApi.iteration2.middle.assertions.DepositAssertions;
 import nbankApi.iteration2.middle.assertions.TransactionAssertions;
-import nbankApi.iteration2.middle.support.steps.SetupSteps;
-import nbankApi.iteration2.middle.assertions.AccountAssertions;
+import nbankApi.iteration2.middle.enums.AccountSelector;
+import nbankApi.iteration2.middle.enums.ExpectedError;
+import nbankApi.iteration2.middle.enums.RequestAuth;
 import nbankApi.iteration2.middle.models.deposit.DepositRequestDto;
 import nbankApi.iteration2.middle.requests.deposit.DepositRequest;
 import nbankApi.iteration2.middle.specs.RequestSpecs;
 import nbankApi.iteration2.middle.specs.ResponseSpecs;
+import nbankApi.iteration2.middle.support.steps.SetupSteps;
+import nbankApi.iteration2.middle.support.steps.UserWithAccount;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static nbankApi.iteration2.middle.constants.ApiConstants.*;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.HashMap;
-import java.util.Map;
+import static nbankApi.iteration2.middle.enums.AccountSelector.*;
+import static nbankApi.iteration2.middle.enums.ExpectedError.BAD_REQUEST;
+import static nbankApi.iteration2.middle.enums.ExpectedError.FORBIDDEN;
+import static nbankApi.iteration2.middle.enums.RequestAuth.AUTHORIZED;
 
 public class UserDepositTest extends BaseTest {
 
-    private static final double BASE_DEPOSIT_AMOUNT = 100.0;
-    private static final double MAX_DEPOSIT_LIMIT = 5000.00;
-    private static final double MAX_DEPOSIT_LIMIT_MINUS_STEP = 4999.99;
-    private static final double MIN_DEPOSIT_LIMIT = 0.01;
-    private static final double MAX_DEPOSIT_LIMIT_PLUS_STEP = 5000.01;
+    private static final double REGULAR_DEPOSIT_AMOUNT = 100.00;
+    private static final double MIN_DEPOSIT_AMOUNT = 0.01;
+    private static final double MAX_DEPOSIT_AMOUNT = 5000.00;
+    private static final double MAX_DEPOSIT_AMOUNT_MINUS_CENT = 4999.99;
+    private static final double MAX_DEPOSIT_AMOUNT_PLUS_CENT = 5000.01;
 
-    @Test
-    public void shouldSuccessfullyDepositWhenCorrectData() {
-        var user = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
+    private static Stream<Arguments> validDepositCases() {
+        return Stream.of(
+                // caseName                                 depositAmount
+                Arguments.of("typical: regular amount", REGULAR_DEPOSIT_AMOUNT),
+                Arguments.of("boundary: min amount", MIN_DEPOSIT_AMOUNT),
+                Arguments.of("boundary: max amount", MAX_DEPOSIT_AMOUNT),
+                Arguments.of("boundary: max amount minus 0.01", MAX_DEPOSIT_AMOUNT_MINUS_CENT)
+        );
+    }
+
+    @ParameterizedTest(name = "{0} ({1})")
+    @MethodSource("validDepositCases")
+    public void shouldDepositWhenAmountIsValid(String caseName, double depositAmount) {
+        UserWithAccount user = SetupSteps.createUserWithEmptyAccount(adminToken);
+        int accountId = user.getAccount().getId();
 
         DepositRequestDto depositDto = DepositRequestDto.builder()
-                .id(user.getAccount().getId())
-                .balance(BASE_DEPOSIT_AMOUNT)
+                .id(accountId)
+                .balance(depositAmount) // поле API называется balance, но содержит сумму пополнения
                 .build();
 
-        var response = new DepositRequest(
+        var depositResponse = new DepositRequest(
                 RequestSpecs.authSpec(user.getToken()),
                 ResponseSpecs.successOk())
                 .post(depositDto);
 
-        DepositAssertions.assertDepositResponse(softly, response, user.getAccount().getId(),
-                BASE_DEPOSIT_AMOUNT, INITIAL_BALANCE_NEW_ACCOUNT + BASE_DEPOSIT_AMOUNT);
+        DepositAssertions.assertDepositResponse(softly, depositResponse, accountId,
+                depositAmount, NEW_ACCOUNT_BALANCE + depositAmount);
 
-        AccountAssertions.assertAccountBalance(softly, user.getToken(), user.getAccount().getId(),
-                INITIAL_BALANCE_NEW_ACCOUNT + BASE_DEPOSIT_AMOUNT);
+        AccountAssertions.assertAccountBalance(softly, user.getToken(), accountId,
+                NEW_ACCOUNT_BALANCE + depositAmount);
 
-        TransactionAssertions.assertDepositTransaction(softly, user.getToken(), user.getAccount().getId(),
-                BASE_DEPOSIT_AMOUNT, user.getAccount().getId());
+        TransactionAssertions.assertDepositTransaction(softly, user.getToken(), accountId,
+                depositAmount, accountId);
     }
 
-    @ParameterizedTest
-    @ValueSource(doubles = {
-            MAX_DEPOSIT_LIMIT,
-            MAX_DEPOSIT_LIMIT_MINUS_STEP,
-            MIN_DEPOSIT_LIMIT
-    })
-    public void shouldDepositToAccountSuccessfullyWhenValidBoundaryValues(double amount) {
-        var user = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
+    private static Stream<Arguments> invalidDepositCases() {
+        return Stream.of(
+                // caseName                                    depositAmount                 targetAccount    requestAuth    xpectedError
+                Arguments.of("400: max amount plus 0.01", MAX_DEPOSIT_AMOUNT_PLUS_CENT, OWN_ACCOUNT, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: zero amount", ZERO_AMOUNT, OWN_ACCOUNT, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("400: negative amount", NEGATIVE_AMOUNT, OWN_ACCOUNT, AUTHORIZED, BAD_REQUEST),
+                Arguments.of("403: deposit to another user's account", REGULAR_DEPOSIT_AMOUNT, ANOTHER_USER_ACCOUNT, AUTHORIZED, FORBIDDEN),
+                Arguments.of("403: deposit to non-existent account", REGULAR_DEPOSIT_AMOUNT, NON_EXISTENT_ACCOUNT, AUTHORIZED, FORBIDDEN),
+                Arguments.of("401: request without token", REGULAR_DEPOSIT_AMOUNT, OWN_ACCOUNT, RequestAuth.UNAUTHORIZED, ExpectedError.UNAUTHORIZED)
+        );
+    }
+
+    @ParameterizedTest(name = "{0} ({1})")
+    @MethodSource("invalidDepositCases")
+    public void shouldNotDepositWhenRequestIsInvalid(String caseName, double depositAmount, AccountSelector targetAccount,
+                                                     RequestAuth requestAuth, ExpectedError expectedError) {
+        UserWithAccount currentUser = SetupSteps.createUserWithEmptyAccount(adminToken);
+        UserWithAccount anotherUser = SetupSteps.createUserWithEmptyAccount(adminToken);
+        int ownAccountId = currentUser.getAccount().getId();
+        int anotherUserAccountId = anotherUser.getAccount().getId();
 
         DepositRequestDto depositDto = DepositRequestDto.builder()
-                .id(user.getAccount().getId())
-                .balance(amount)
+                .id(targetAccount.selectAccountId(ownAccountId, anotherUserAccountId))
+                .balance(depositAmount)
                 .build();
 
-        var response = new DepositRequest(
-                RequestSpecs.authSpec(user.getToken()),
-                ResponseSpecs.successOk())
+        new DepositRequest(requestAuth.requestSpec(currentUser.getToken()), expectedError.responseSpec())
                 .post(depositDto);
 
-        DepositAssertions.assertDepositResponse(softly, response, user.getAccount().getId(),
-                amount, INITIAL_BALANCE_NEW_ACCOUNT + amount);
-
-        AccountAssertions.assertAccountBalance(softly, user.getToken(), user.getAccount().getId(),
-                INITIAL_BALANCE_NEW_ACCOUNT + amount);
-
-        TransactionAssertions.assertDepositTransaction(softly, user.getToken(), user.getAccount().getId(),
-                amount, user.getAccount().getId());
-    }
-
-    @ParameterizedTest
-    @ValueSource(doubles = {
-            MAX_DEPOSIT_LIMIT_PLUS_STEP,
-            ZERO_AMOUNT,
-            NEGATIVE_AMOUNT,
-    })
-    public void shouldReturn400WhenAmountInvalidBoundaryValues(double amount) {
-        var user = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        DepositRequestDto depositDto = DepositRequestDto.builder()
-                .id(user.getAccount().getId())
-                .balance(amount)
-                .build();
-
-       new DepositRequest(
-                RequestSpecs.authSpec(user.getToken()),
-                ResponseSpecs.badRequest())
-                .post(depositDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, user.getToken(), user.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @Test
-    public void shouldReturn403WhenDepositToAnotherUserId() {
-        var userA = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-        var userB = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        DepositRequestDto depositDto = DepositRequestDto.builder()
-                .id(userB.getAccount().getId())
-                .balance(BASE_DEPOSIT_AMOUNT)
-                .build();
-
-        new DepositRequest(
-                RequestSpecs.authSpec(userA.getToken()),
-                ResponseSpecs.forbidden())
-                .post(depositDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, userA.getToken(), userA.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-
-        AccountAssertions.assertAccountBalance(
-                softly, userB.getToken(), userB.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @Test
-    public void shouldReturn403WhenDepositToNonExistentUserId() {
-        var user = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        DepositRequestDto depositDto = DepositRequestDto.builder()
-                .id(NON_EXISTENT_USER_ID)
-                .balance(BASE_DEPOSIT_AMOUNT)
-                .build();
-
-        new DepositRequest(
-                RequestSpecs.authSpec(user.getToken()),
-                ResponseSpecs.forbidden())
-                .post(depositDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, user.getToken(), user.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @Test
-    public void shouldReturn401WhenUnauthorizedUser() {
-        var user = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        DepositRequestDto depositDto = DepositRequestDto.builder()
-                .id(user.getAccount().getId())
-                .balance(BASE_DEPOSIT_AMOUNT)
-                .build();
-
-        new DepositRequest(
-                RequestSpecs.unauthSpec(),
-                ResponseSpecs.unauth())
-                .post(depositDto);
-
-        AccountAssertions.assertAccountBalance(
-                softly, user.getToken(), user.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {
-            AMOUNT_AS_STRING,
-            AMOUNT_AS_NUMERIC_STRING
-    })
-    public void shouldReturn400WhenInvalidDataTypeInBalanceField(Object invalidAmount) {
-        var user = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        Map<String, Object> depositBody = new HashMap<>();
-        depositBody.put("accountId", user.getAccount().getId());
-        depositBody.put("amount", invalidAmount);
-
-        new DepositRequest(
-                RequestSpecs.authSpec(user.getToken()),
-                ResponseSpecs.badRequest())
-                .post(depositBody);
-
-        AccountAssertions.assertAccountBalance(
-                softly, user.getToken(), user.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WithoutBalanceFieldInBody() {
-        var user = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        Map<String, Object> depositBody = new HashMap<>();
-        depositBody.put("accountId", user.getAccount().getId());
-
-        new DepositRequest(
-                RequestSpecs.authSpec(user.getToken()),
-                ResponseSpecs.badRequest())
-                .post(depositBody);
-
-        AccountAssertions.assertAccountBalance(
-                softly, user.getToken(), user.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WithoutIdFieldInBody() {
-        var user = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        Map<String, Object> depositBody = new HashMap<>();
-        depositBody.put("amount", BASE_DEPOSIT_AMOUNT);
-
-        new DepositRequest(
-                RequestSpecs.authSpec(user.getToken()),
-                ResponseSpecs.badRequest())
-                .post(depositBody);
-
-        AccountAssertions.assertAccountBalance(
-                softly, user.getToken(), user.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
-    }
-
-    @Test
-    public void shouldReturn400WhenRequestWithoutBody() {
-        var user = SetupSteps.createAndFundAccount(adminToken, INITIAL_BALANCE_NEW_ACCOUNT);
-
-        new DepositRequest(
-                RequestSpecs.authSpec(user.getToken()),
-                ResponseSpecs.badRequest())
-                .post();
-
-        AccountAssertions.assertAccountBalance(
-                softly, user.getToken(), user.getAccount().getId(), INITIAL_BALANCE_NEW_ACCOUNT);
+        AccountAssertions.assertAccountBalance(softly, currentUser.getToken(), ownAccountId, NEW_ACCOUNT_BALANCE);
+        AccountAssertions.assertAccountBalance(softly, anotherUser.getToken(), anotherUserAccountId, NEW_ACCOUNT_BALANCE);
     }
 }

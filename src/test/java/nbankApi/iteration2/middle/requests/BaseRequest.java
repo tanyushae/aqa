@@ -26,7 +26,7 @@ public abstract class BaseRequest<T extends BaseModel> {
 
     public ValidatableResponse get() {
         // todo
-        throw new UnsupportedOperationException("POST method is not supported for this request");
+        throw new UnsupportedOperationException("GET method is not supported for this request");
     }
 
     public ValidatableResponse put(T model) {
@@ -36,6 +36,6 @@ public abstract class BaseRequest<T extends BaseModel> {
 
     public void delete() {
         // todo
-        throw new UnsupportedOperationException("PUT method is not supported for this request");
+        throw new UnsupportedOperationException("DELETE method is not supported for this request");
     }
 }

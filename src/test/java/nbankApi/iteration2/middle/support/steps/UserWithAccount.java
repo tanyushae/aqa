@@ -6,11 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import nbankApi.iteration2.middle.models.account.CustomerAccountResponseDto;
 
+/**
+ * Созданный пользователь (его токен) и его единственный счёт
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CustomerWithAccount {
+public class UserWithAccount {
     private String token;
     private CustomerAccountResponseDto account;
 }

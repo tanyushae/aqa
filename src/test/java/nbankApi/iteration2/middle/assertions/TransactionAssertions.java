@@ -13,29 +13,29 @@ import java.util.List;
 public class TransactionAssertions {
 
     public static void assertDepositTransaction(SoftAssertions softly, String userToken,
-                                                int accountId, double amount, int relatedAccountId) {
+                                                int accountId, double expectedAmount, int expectedRelatedAccountId) {
 
-        assertHistoryTransaction(softly, userToken, accountId,
-                TransactionType.DEPOSIT, amount, relatedAccountId);
+        assertTransactionHistoryContains(softly, userToken, accountId,
+                TransactionType.DEPOSIT, expectedAmount, expectedRelatedAccountId);
     }
 
-    public static void assertTransactionOut(SoftAssertions softly, String userToken,
-                                            int accountId, double amount, int relatedAccountId) {
+    public static void assertTransferOutTransaction(SoftAssertions softly, String userToken,
+                                            int accountId, double expectedAmount, int expectedRelatedAccountId) {
 
-        assertHistoryTransaction(softly, userToken, accountId,
-                TransactionType.TRANSFER_OUT, amount, relatedAccountId);
+        assertTransactionHistoryContains(softly, userToken, accountId,
+                TransactionType.TRANSFER_OUT, expectedAmount, expectedRelatedAccountId);
     }
 
-    public static void assertTransactionIn(SoftAssertions softly, String userToken,
-                                           int accountId, double amount, int relatedAccountId) {
+    public static void assertTransferInTransaction(SoftAssertions softly, String userToken,
+                                           int accountId, double expectedAmount, int expectedRelatedAccountId) {
 
-        assertHistoryTransaction(softly, userToken, accountId,
-                TransactionType.TRANSFER_IN, amount, relatedAccountId);
+        assertTransactionHistoryContains(softly, userToken, accountId,
+                TransactionType.TRANSFER_IN, expectedAmount, expectedRelatedAccountId);
     }
 
-    private static void assertHistoryTransaction(SoftAssertions softly, String userToken,
-                                                 int accountId, TransactionType expectedType, double amount,
-                                                 int relatedAccountId) {
+    private static void assertTransactionHistoryContains(SoftAssertions softly, String userToken,
+                                                 int accountId, TransactionType expectedType, double expectedAmount,
+                                                 int expectedRelatedAccountId) {
 
         List<TransactionDto> transactions = new GetAccountTransactionsRequest(
                 RequestSpecs.authSpec(userToken),
@@ -55,12 +55,12 @@ public class TransactionAssertions {
                             .isEqualTo(expectedType);
 
                     softly.assertThat(transaction.getAmount())
-                            .as("Check transaction amount")
-                            .isEqualTo(amount);
+                            .as("Check transaction expectedAmount")
+                            .isEqualTo(expectedAmount);
 
                     softly.assertThat(transaction.getRelatedAccountId())
                             .as("Check related account ID")
-                            .isEqualTo(relatedAccountId);
+                            .isEqualTo(expectedRelatedAccountId);
                 });
     }
 }

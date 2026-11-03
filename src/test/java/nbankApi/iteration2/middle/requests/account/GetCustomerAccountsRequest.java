@@ -8,9 +8,9 @@ import nbankApi.iteration2.middle.requests.BaseRequest;
 
 import static io.restassured.RestAssured.given;
 
-public class GetCustomerAccountRequest extends BaseRequest<EmptyModel> {
+public class GetCustomerAccountsRequest extends BaseRequest<EmptyModel> {
 
-    public GetCustomerAccountRequest(RequestSpecification requestSpecification,
+    public GetCustomerAccountsRequest(RequestSpecification requestSpecification,
                                      ResponseSpecification responseSpecification) {
         super(requestSpecification, responseSpecification);
     }

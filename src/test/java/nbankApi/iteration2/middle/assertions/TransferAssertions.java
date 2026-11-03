@@ -7,7 +7,7 @@ import org.assertj.core.api.SoftAssertions;
 public class TransferAssertions {
 
     public static void assertTransferResponse(SoftAssertions softly, ValidatableResponse response,
-                                              int expectedSenderId, double expectedAmount, int expectedReceiverId) {
+                                              int expectedSenderAccountId, double expectedAmount, int expectedReceiverAccountId) {
 
         AccountTransferResponseDto responseDto = response.extract()
                 .as(AccountTransferResponseDto.class);
@@ -17,7 +17,7 @@ public class TransferAssertions {
         if (responseDto != null) {
             softly.assertThat(responseDto.getSenderAccountId())
                     .as("Check sender account ID")
-                    .isEqualTo(expectedSenderId);
+                    .isEqualTo(expectedSenderAccountId);
 
             softly.assertThat(responseDto.getMessage())
                     .as("Check message")
@@ -29,7 +29,7 @@ public class TransferAssertions {
 
             softly.assertThat(responseDto.getReceiverAccountId())
                     .as("Check receiver account ID")
-                    .isEqualTo(expectedReceiverId);
+                    .isEqualTo(expectedReceiverAccountId);
         }
     }
 }
