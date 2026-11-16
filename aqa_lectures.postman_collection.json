@@ -1,0 +1,3671 @@
+{
+	"info": {
+		"_postman_id": "b51f9965-cae4-46fc-8385-2080ad5f172c",
+		"name": "aqa_lectures",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19215245"
+	},
+	"item": [
+		{
+			"name": "nbank_tests",
+			"item": [
+				{
+					"name": "iteration_1",
+					"item": [
+						{
+							"name": "Get auth token",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/auth/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Positive test: Admin can create new user with correct data",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"olga19981\",\n  \"password\": \"Oolga#19981\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with blank username",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"  \",\n  \"password\": \"Pass{{$randomInt}}!\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with username 2 characters",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"ab\",\n  \"password\": \"Pass{{$randomInt}}!\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with username 16 characters",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"abcdefghfhfhffhr\",\n  \"password\": \"Pass{{$randomInt}}!\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with username contains $%^&*()@# characters",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"$%^&*()@#\",\n  \"password\": \"Pass{{$randomInt}}!\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with blank password",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user_{{$randomInt}}\",\n  \"password\": \"   \",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with password less than 8 characters",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user_{{$randomInt}}\",\n  \"password\": \"1234567\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with password without digits",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user_{{$randomInt}}\",\n  \"password\": \"Password!\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with password without one lower case character",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user_{{$randomInt}}\",\n  \"password\": \"PASSWORD123!\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with password without one upper case character",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user_{{$randomInt}}\",\n  \"password\": \"password123!\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with password without special character",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user_{{$randomInt}}\",\n  \"password\": \"Password123\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with password with spaces",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user_{{$randomInt}}\",\n  \"password\": \"Pass word123!\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Admin cannot create new user with role not from list \"ADMIN\", \"USER\"",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"user_{{$randomInt}}\",\n  \"password\": \"Pass{{$randomInt}}!\",\n  \"role\": \"EDITOR\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Negative test: Create user that already exists by admin",
+							"request": {
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "password",
+											"value": "admin",
+											"type": "string"
+										},
+										{
+											"key": "username",
+											"value": "admin",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"olga19981\",\n  \"password\": \"Oolga#19981\",\n  \"role\": \"USER\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/admin/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"admin",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Positive test: Authorized user can create account",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:4111/api/v1/accounts",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"accounts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Positive test: check account was created",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:4111/api/v1/customer/accounts",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4111",
+									"path": [
+										"api",
+										"v1",
+										"customer",
+										"accounts"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "iteration_2",
+					"item": [
+						{
+							"name": "User deposit",
+							"item": [
+								{
+									"name": "Setup: Get admin auth token",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/auth/login",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"auth",
+												"login"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Create user A by admin",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "admin",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "admin",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"olga19981\",\n  \"password\": \"Oolga#19981\",\n  \"role\": \"USER\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/admin/users",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A creates account A",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Create user B by admin",
+									"request": {
+										"auth": {
+											"type": "basic",
+											"basic": [
+												{
+													"key": "password",
+													"value": "admin",
+													"type": "string"
+												},
+												{
+													"key": "username",
+													"value": "admin",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"oleg19981\",\n  \"password\": \"Ooleg#19981\",\n  \"role\": \"USER\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/admin/users",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User B creates account B",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xlZzE5OTgxOk9vbGVnIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Get initial balance for account A",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Base deposit to account A (amount 100.00)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 100.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Account A balance increased by deposit amount (100.00)",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Deposit transaction appears in account A transaction history",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/1/transactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"1",
+												"transactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User can deposit upper limit amount 5000.00",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 5000.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User can deposit amount 4999.99 (upper boundary minus step)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 4999.99\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User can deposit lower limit amount 0.01",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 0.01\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit amount 5000.01 exceeding upper limit",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 5000.01\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit zero amount 0.00",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 0.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit negative amount -0.01",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": -0.01\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot deposit to user B's account",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 2,\n  \"balance\": 100\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit to non-existent account ID",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 5,\n  \"balance\": 100\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: Unauthorized user cannot make a deposit",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "",
+												"value": "",
+												"type": "text",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 100\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit when amount is numeric string (\"500\")",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": \"500\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit when amount is text string (\"five\")",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": \"five\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit when amount is null",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": null\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit without balance field in body",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit without id field",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"balance\": 100\n}"
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot deposit without body ({})",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic b2xnYTE5OTgxOk9vbGdhIzE5OTgx",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Transfer from one account to another",
+							"item": [
+								{
+									"name": "Setup: Get admin auth token",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/auth/login",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"auth",
+												"login"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Create user A by admin",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic YWRtaW46YWRtaW4=",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"elena1994\",\n  \"password\": \"Eelena1994!\",\n  \"role\": \"USER\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/admin/users",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A creates account A1",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A creates account A2",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Create user B by admin",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic YWRtaW46YWRtaW4=",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"polina1995\",\n  \"password\": \"Ppolina1994!\",\n  \"role\": \"USER\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/admin/users",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User B creates account B1",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic cG9saW5hMTk5NTpQcG9saW5hMTk5NCE=",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A deposits 1000.00 to account A1",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 1000.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Get initial balance for User A",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Get initial balance for User B",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic cG9saW5hMTk5NTpQcG9saW5hMTk5NCE=",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Base transfer to another user, from account A1 to account B1 (amount 100.00)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": 100.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Sender balance decreased by transfer amount",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Recipient balance increased by transfer amount",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic cG9saW5hMTk5NTpQcG9saW5hMTk5NCE=",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Debit transaction appears in sender account history",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/1/transactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"1",
+												"transactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Credit transaction appears in recipient account history",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic cG9saW5hMTk5NTpQcG9saW5hMTk5NCE=",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/3/transactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"3",
+												"transactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Get initial balance for account A2",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User A can transfer money between own accounts (from A1 to A2, amount 100.00)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 2,\n  \"amount\": 100.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Account A1 balance decreased by internal transfer amount (100.00)",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Account A2 balance increased by internal transfer amount (100.00)",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Internal debit transaction appears in account A1 history",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/1/transactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"1",
+												"transactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Internal credit transaction appears in account A2 history",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/2/transactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"2",
+												"transactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A deposits 5000.00 to account A1",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 5000.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A deposits 5000.00 to account A1 (second deposit)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 5000.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User A can transfer upper limit amount 10000.00",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": 10000.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A deposits 5000.00 to account A1",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 5000.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A deposits 5000.00 to account A1 (second deposit)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 5000.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User A can transfer amount 9999.99 (upper boundary minus step)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": 9999.99\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User A can transfer lower limit amount 0.01",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": 0.01\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A deposits 5000.00 to account A1",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 5000.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: User A deposits 5000.00 to account A1 (second deposit)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 1,\n  \"balance\": 5000.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/deposit",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"deposit"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot transfer amount 10000.01 exceeding upper limit",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": 10000.01\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot transfer zero amount 0.00",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": 0.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot transfer negative amount -1.00",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": -1.00\n}"
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Get account A2 current balance",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/accounts",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"accounts"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot transfer amount exceeding current balance (from A2, amount 100.01)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 2,\n  \"receiverAccountId\": 3,\n  \"amount\": 100.01\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot transfer money from another user's account (from user B's accont)",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 3,\n  \"receiverAccountId\": 1,\n  \"amount\": 100.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot transfer money to non-existent account ID",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 99,\n  \"amount\": 100.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot transfer money from account A1 to the same account A1",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 1,\n  \"amount\": 10.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: Unauthorized user cannot transfer money",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "",
+												"value": "",
+												"type": "text",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": 10.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot transfer when amount is numeric string (\"5\")",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"receiverAccountId\": 3,\n  \"amount\": 100.00\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot transfer when amount is text string (\"five thousand\")",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": \"five thousand\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot transfer when amount is null",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3,\n  \"amount\": null\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot transfer without amount field in body",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"receiverAccountId\": 3\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot transfer without senderAccountId field",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"receiverAccountId\": 2,\n  \"amount\": 50\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User cannot transfer without receiverAccountId field",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic ZWxlbmExOTk0OkVlbGVuYTE5OTQh",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"senderAccountId\": 1,\n  \"amount\": 100\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/accounts/transfer",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"accounts",
+												"transfer"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Update Profile Name",
+							"item": [
+								{
+									"name": "Setup: Get admin auth token",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "",
+												"value": "",
+												"type": "text",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/auth/login",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"auth",
+												"login"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Setup: Create user A by admin",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic YWRtaW46YWRtaW4=",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"Nina12\",\n  \"password\": \"Nina1234!\",\n  \"role\": \"USER\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/admin/users",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"admin",
+												"users"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User A can update profile name to valid new name (\"New Name\")",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"New Name\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Profile name updated successfully in user A profile (\"New Name\")",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User A can re-update profile name to another valid name (\"New ReName\")",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"New ReName\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Profile name re-updated successfully in user A profile (\"New ReName\")",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: User A can update profile name with Cyrillic letters (\"Иван Иванов\")",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"Иван Иванов\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Positive test: Profile name updated successfully with Cyrillic (\"Иван Иванов\")",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot set profile name with one word only (\"NewName\")",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"NewName\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot set profile name with three words (\"New Name Name\")",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"New Name Name\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot set profile name as empty string (\"\")",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: Unauthorized user cannot update profile name",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": \"New Name\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot set profile name as null",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"name\": null\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Negative test: User A cannot update profile name without name field in body",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Basic TmluYTEyOk5pbmExMjM0IQ==",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:4111/api/v1/customer/profile",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "4111",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"profile"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
