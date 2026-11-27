@@ -77,14 +77,17 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
     private static final String TRANSFER_INVALID_DATA_MESSAGE = "❌ Please fill all fields and confirm.";
     private static final String TRANSFER_NOT_FOUND_ACCOUNT_MESSAGE = "❌ No user found with this account number.";
     private static final String TRANSFER_ABOVE_LIMIT_MESSAGE = "❌ Error: Transfer amount cannot exceed 10000";
-    private static final String TRANSFER_INSUFFICIENT_FUNDS_MESSAGE = "❌ Error: Invalid transfer: insufficient funds or invalid accounts";
+    private static final String TRANSFER_INSUFFICIENT_FUNDS_MESSAGE =
+            "❌ Error: Invalid transfer: insufficient funds or invalid accounts";
     private static final String TRANSFER_ZERO_AMOUNT_MESSAGE = "❌ Error: Transfer amount must be at least 0.01";
 
     private static Stream<Arguments> validTransferCases() {
         return Stream.of(
                 // caseName | amount | senderBalance | recipientBalance
-                Arguments.of("regular amount", REGULAR_TRANSFER_AMOUNT, REGULAR_SENDER_BALANCE_UI, REGULAR_RECIPIENT_BALANCE_UI),
-                Arguments.of("float amount", FLOAT_TRANSFER_AMOUNT, FLOAT_SENDER_BALANCE_UI, FLOAT_RECIPIENT_BALANCE_UI)
+                Arguments.of("regular amount", REGULAR_TRANSFER_AMOUNT,
+                        REGULAR_SENDER_BALANCE_UI, REGULAR_RECIPIENT_BALANCE_UI),
+                Arguments.of("float amount", FLOAT_TRANSFER_AMOUNT,
+                        FLOAT_SENDER_BALANCE_UI, FLOAT_RECIPIENT_BALANCE_UI)
         );
     }
 
@@ -94,7 +97,8 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
     public void shouldTransferToOtherUserWhenAllDataValid(String caseName, String amount, String senderBalance,
                                                           String recipientBalance) {
         // Предусловия (API)
-        UserWithAccount userA = SetupSteps.createUserWithFundedAccount(adminToken, SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSIT_COUNT);
+        UserWithAccount userA = SetupSteps.createUserWithFundedAccount(adminToken,
+                SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSIT_COUNT);
         UserWithAccount userB = SetupSteps.createUserWithEmptyAccount(adminToken);
         String userBName = getUsername(userB.getToken());
         String recipientAccount = userB.getAccount().getAccountNumber();
@@ -129,7 +133,7 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
         String userBAccOptionAfterTransfer = ACCOUNT_OPTION_TEMPLATE.formatted(
                 recipientAccount, recipientBalance);
         $(ACCOUNT_SELECT).$$(OPTION).findBy(exactText(userBAccOptionAfterTransfer)).should(exist);
-        // Дополнительно: проверка балансов на сервере через API
+        // Шаг 11: проверка балансов на сервере через API
         AccountAssertions.assertAccountBalance(softly, userA.getToken(),
                 userA.getAccount().getId(), Double.parseDouble(senderBalance));
         AccountAssertions.assertAccountBalance(softly, userB.getToken(),
@@ -140,7 +144,8 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
     @Test
     public void shouldTransferToOwnAccountWhenAllDataValid() {
         // Предусловия (API)
-        UserWithTwoAccounts userA = SetupSteps.createUserWithTwoAccounts(adminToken, SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSIT_COUNT);
+        UserWithTwoAccounts userA = SetupSteps.createUserWithTwoAccounts(adminToken,
+                SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSIT_COUNT);
         String recipientAccount = userA.getSecondAccount().getAccountNumber();
         // Предусловия (UI)
         String userAName = getUsername(userA.getToken());
@@ -164,14 +169,14 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
         makeTransfer(recipientAccount, REGULAR_TRANSFER_AMOUNT);
         // Шаг 9
         refresh();
-        String acc1OptionAfterTransfer = ACCOUNT_OPTION_TEMPLATE.formatted(
+        String firstAccOptionAfterTransfer = ACCOUNT_OPTION_TEMPLATE.formatted(
                 userA.getFirstAccount().getAccountNumber(), REGULAR_SENDER_BALANCE_UI);
-        $(ACCOUNT_SELECT).$$(OPTION).findBy(exactText(acc1OptionAfterTransfer)).should(exist);
+        $(ACCOUNT_SELECT).$$(OPTION).findBy(exactText(firstAccOptionAfterTransfer)).should(exist);
         // Шаг 10
-        String acc2OptionAfterTransfer = ACCOUNT_OPTION_TEMPLATE.formatted(
+        String secondAccOptionAfterTransfer = ACCOUNT_OPTION_TEMPLATE.formatted(
                 recipientAccount, REGULAR_RECIPIENT_BALANCE_UI);
-        $(ACCOUNT_SELECT).$$(OPTION).findBy(exactText(acc2OptionAfterTransfer)).should(exist);
-        // Дополнительно: проверка балансов на сервере через API
+        $(ACCOUNT_SELECT).$$(OPTION).findBy(exactText(secondAccOptionAfterTransfer)).should(exist);
+        // Шаг 11: проверка балансов на сервере через API
         AccountAssertions.assertAccountBalance(softly, userA.getToken(),
                 userA.getFirstAccount().getId(), Double.parseDouble(REGULAR_SENDER_BALANCE_UI));
         AccountAssertions.assertAccountBalance(softly, userA.getToken(),
@@ -194,7 +199,8 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
     public void shouldNotTransferWhenFormIsInvalid(String caseName, RecipientAccount recipient, String amount,
                                                    ConfirmCheckbox confirmCheckbox, String expectedMessage) {
         // Предусловия (API)
-        UserWithAccount userA = SetupSteps.createUserWithFundedAccount(adminToken, SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSIT_COUNT);
+        UserWithAccount userA = SetupSteps.createUserWithFundedAccount(adminToken,
+                SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSIT_COUNT);
         UserWithAccount userB = SetupSteps.createUserWithEmptyAccount(adminToken);
         // Предусловия (UI)
         String userAName = getUsername(userA.getToken());
@@ -228,7 +234,7 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
         String acc1OptionAfterAttempt = ACCOUNT_OPTION_TEMPLATE.formatted(
                 userA.getAccount().getAccountNumber(), SETUP_BALANCE_UI);
         $(ACCOUNT_SELECT).$$(OPTION).findBy(exactText(acc1OptionAfterAttempt)).should(exist);
-        // Дополнительно: проверка балансов на сервере через API
+        // Шаг 7: проверка балансов на сервере через API
         AccountAssertions.assertAccountBalance(softly, userA.getToken(),
                 userA.getAccount().getId(), Double.parseDouble(SETUP_BALANCE_UI));
         AccountAssertions.assertAccountBalance(softly, userB.getToken(),
@@ -243,12 +249,14 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
         );
     }
 
-    @DisplayName("UI-TR-04. Перевод, отклонённый сервером")
+    @DisplayName("UI-TR-04. Перевод, отклоненный сервером")
     @ParameterizedTest(name = "{0}")
     @MethodSource("serverRejectedTransferCases")
-    public void shouldShowErrorAlertWhenTransferRejectedByServer(String caseName, String amount, String expectedMessage) {
+    public void shouldShowErrorAlertWhenTransferRejectedByServer(String caseName, String amount,
+                                                                 String expectedMessage) {
         // Предусловия (API)
-        UserWithAccount userA = SetupSteps.createUserWithFundedAccount(adminToken, SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSIT_COUNT);
+        UserWithAccount userA = SetupSteps.createUserWithFundedAccount(adminToken,
+                SETUP_DEPOSIT_AMOUNT, SETUP_DEPOSIT_COUNT);
         UserWithAccount userB = SetupSteps.createUserWithEmptyAccount(adminToken);
         String recipientAccount = userB.getAccount().getAccountNumber();
         // Предусловия (UI)
@@ -290,8 +298,10 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
     public void shouldShowErrorAlertWhenAmountExceedsLimit() {
         // Предусловия (API)
         UserWithAccount userA = SetupSteps.createUserWithEmptyAccount(adminToken);
-        SetupSteps.depositToAccount(userA.getToken(), userA.getAccount().getId(), DEPOSIT_AT_LIMIT_AMOUNT, DEPOSIT_AT_LIMIT_COUNT);
-        SetupSteps.depositToAccount(userA.getToken(), userA.getAccount().getId(), SMALL_DEPOSIT_AMOUNT, SMALL_DEPOSIT_COUNT);
+        SetupSteps.depositToAccount(userA.getToken(), userA.getAccount().getId(),
+                DEPOSIT_AT_LIMIT_AMOUNT, DEPOSIT_AT_LIMIT_COUNT);
+        SetupSteps.depositToAccount(userA.getToken(), userA.getAccount().getId(),
+                SMALL_DEPOSIT_AMOUNT, SMALL_DEPOSIT_COUNT);
         UserWithAccount userB = SetupSteps.createUserWithEmptyAccount(adminToken);
         String recipientAccount = userB.getAccount().getAccountNumber();
         // Предусловия (UI)
@@ -328,7 +338,7 @@ public class TransferFromOneAccountToAnotherUiTest extends BaseUiTest {
         $(ACCOUNT_SELECT).$$(OPTION).findBy(exactText(acc1OptionAfterAttempt)).should(exist);
     }
 
-    // Шаг 1: открыть форму перевода и проверить её
+    // Шаг 1: открыть форму перевода и проверить ее
     private void openTransferForm() {
         $(withText(MAKE_A_TRANSFER_TEXT)).click();
         $$(PAGE_TITLE).findBy(text(MAKE_A_TRANSFER_TEXT)).shouldBe(visible);

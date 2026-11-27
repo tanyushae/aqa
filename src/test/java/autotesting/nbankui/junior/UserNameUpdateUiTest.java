@@ -25,7 +25,6 @@ import static com.codeborne.selenide.Condition.exactText;
 import static com.codeborne.selenide.Condition.exactValue;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selectors.withText;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
 import static com.codeborne.selenide.Selenide.refresh;
@@ -60,11 +59,6 @@ public class UserNameUpdateUiTest extends BaseUiTest {
         username = getUsername(userToken);
     }
 
-    private void loginAndCheckHeader(String expectedName) {
-        loginAs(username, USER_PASSWORD);
-        checkHeader(expectedName, username);
-    }
-
     @DisplayName("UI-NAME-01. Успешное изменение имени")
     @Test
     public void shouldUpdateNameWhenNameIsValid() {
@@ -72,7 +66,7 @@ public class UserNameUpdateUiTest extends BaseUiTest {
         loginAndCheckHeader(NONAME_TEXT);
         // Шаг 1
         $(PROFILE_HEADER).click();
-        $(withText(EDIT_PROFILE_TEXT)).shouldBe(visible);
+        $$(PAGE_TITLE).findBy(text(EDIT_PROFILE_TEXT)).shouldBe(visible);
         $(NEW_NAME_INPUT).shouldBe(visible).shouldBe(empty);
         $$(BUTTON).findBy(text(SAVE_CHANGES_BUTTON_TEXT)).shouldBe(visible);
         // Шаг 2
@@ -110,7 +104,7 @@ public class UserNameUpdateUiTest extends BaseUiTest {
         loginAndCheckHeader(NONAME_TEXT);
         // Шаг 1
         $(PROFILE_HEADER).click();
-        $(withText(EDIT_PROFILE_TEXT)).shouldBe(visible);
+        $$(PAGE_TITLE).findBy(text(EDIT_PROFILE_TEXT)).shouldBe(visible);
         $(NEW_NAME_INPUT).shouldBe(visible).shouldBe(empty);
         $$(BUTTON).findBy(text(SAVE_CHANGES_BUTTON_TEXT)).shouldBe(visible);
         // Шаг 2
@@ -142,7 +136,7 @@ public class UserNameUpdateUiTest extends BaseUiTest {
         loginAndCheckHeader(VALID_PROFILE_NAME);
         // Шаг 1
         $(PROFILE_HEADER).click();
-        $(withText(EDIT_PROFILE_TEXT)).shouldBe(visible);
+        $$(PAGE_TITLE).findBy(text(EDIT_PROFILE_TEXT)).shouldBe(visible);
         $(NEW_NAME_INPUT).shouldBe(visible).shouldHave(exactValue(VALID_PROFILE_NAME));
         $$(BUTTON).findBy(text(SAVE_CHANGES_BUTTON_TEXT)).shouldBe(visible);
         // Шаг 2
@@ -162,5 +156,10 @@ public class UserNameUpdateUiTest extends BaseUiTest {
         $(USER_USERNAME).shouldHave(exactText(USERNAME_HEADER_TEMPLATE.formatted(username)));
         // Шаг 6: проверка имени на сервере через API
         ProfileAssertions.assertStoredProfile(softly, userToken, userId, VALID_PROFILE_NAME);
+    }
+
+    private void loginAndCheckHeader(String expectedName) {
+        loginAs(username, USER_PASSWORD);
+        checkHeader(expectedName, username);
     }
 }
